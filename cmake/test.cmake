@@ -7,3 +7,13 @@ target_sources(event_dispatcher_test
         PRIVATE
         src/test/event_dispatcher_test.cpp
 )
+
+add_executable(glm_test)
+target_link_libraries(glm_test
+        PRIVATE
+        star
+)
+target_sources(glm_test
+        PRIVATE
+        src/test/glm_test.cpp
+)

@@ -1,40 +1,62 @@
-#include "star/core/event/event_dispatcher.hpp"
-#include "star/core/event/input_event.hpp"
+#include <glad/glad.h>
+// order
 #include <GLFW/glfw3.h>
+#include <functional>
+#include <star/core/error/error.hpp>
+#include <star/core/event/event_dispatcher.hpp>
+#include <star/core/event/input_event.hpp>
 #include <star/platform/windows/windows_window.hpp>
-#include <utility>
 
 namespace star {
-static bool sGLFWInitialized = false;
-
 static void GLFWErrorCallback(int error, const char *description) {
     Log::engineError("GLFW Error ({0}): {1}.", error, description);
 }
 
+static void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
 WindowsWindow::WindowsWindow(String title, int32 width, int32 height)
     : _title(std::move(title)), _width(width), _height(height) {
-    if (!sGLFWInitialized) {
-        int success = glfwInit();
-        STAR_ASSERT(success, "GLFW initialization failed.")
-        sGLFWInitialized = true;
-        glfwSetErrorCallback(GLFWErrorCallback);
-    }
+    glfwInit();
+    glfwSetErrorCallback(&GLFWErrorCallback);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     this->_window = glfwCreateWindow(this->_width, this->_height,
                                      this->_title.c_str(), nullptr, nullptr);
-    glfwMakeContextCurrent(this->_window);
-    star::Log::engineInfo("Window:{0} initialization succeeded.", this->_title);
-    star::Log::engineInfo("Window information title:{0};width:{1};height:{2}.",
-                          this->_title, this->_width, this->_height);
+
+    this->_context = new OpenGLContext(this->_window);
 }
 
-WindowsWindow::~WindowsWindow() { this->shutDown(); }
+WindowsWindow::~WindowsWindow() = default;
 
-void WindowsWindow::onUpdate() {
+void WindowsWindow::onStart(const Event &e) {
+    glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
+}
+
+void WindowsWindow::onUpdate(const Event &e) {
     glfwPollEvents();
-    glfwSwapBuffers(this->_window);
+    this->_context->swapBuffers();
 }
 
-void WindowsWindow::registerEvents() {
+void WindowsWindow::onDestroy(const Event &e) {
+    glfwDestroyWindow(this->_window);
+    glfwTerminate();
+    if (this->_context) {
+        delete this->_context;
+        this->_context = nullptr;
+    }
+    star::Log::engineInfo("Window was closed.");
+}
+
+int32 WindowsWindow::getWidth() const { return this->_width; }
+
+int32 WindowsWindow::getHeight() const { return this->_height; }
+
+void *WindowsWindow::getNativeWindow() const { return this->_window; }
+
+void WindowsWindow::registerDispatch() {
     glfwSetKeyCallback(
         (GLFWwindow *)this->_window,
         [](GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -57,6 +79,7 @@ void WindowsWindow::registerEvents() {
             }
         });
 
+    glfwSetFramebufferSizeCallback(this->_window, &framebufferSizeCallback);
     // glfw event
     /*
     1. 窗口大小改变事件(Window Resize)
@@ -160,14 +183,15 @@ void WindowsWindow::registerEvents() {
     Log::engineInfo("Window event registration succeeded. ");
 }
 
-int32 WindowsWindow::getWidth() const { return this->_width; }
-
-int32 WindowsWindow::getHeight() const { return this->_height; }
-
-void WindowsWindow::shutDown() {
-    star::Log::engineInfo("Window was closed.");
-    glfwDestroyWindow(this->_window);
+void WindowsWindow::registerEvents() {
+    EventDispatcher::subscribeEvent(EventType::START_EVENT, [this](auto &&e) {
+        this->onStart(std::forward<decltype(e)>(e));
+    });
+    EventDispatcher::subscribeEvent(EventType::UPDATE_EVENT, [this](auto &&e) {
+        this->onUpdate(std::forward<decltype(e)>(e));
+    });
+    EventDispatcher::subscribeEvent(EventType::DESTROY_EVENT, [this](auto &&e) {
+        this->onDestroy(std::forward<decltype(e)>(e));
+    });
 }
-
-void *WindowsWindow::getNativeWindow() const { return this->_window; }
 } // namespace star

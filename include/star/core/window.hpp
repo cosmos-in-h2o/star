@@ -10,15 +10,13 @@ class Window {
   public:
     virtual ~Window();
 
-    virtual void onUpdate() = 0;
-    virtual void shutDown() = 0;
+    virtual int32 getWidth() const = 0;
+    virtual int32 getHeight() const = 0;
 
-    virtual void registerEvents()=0;
+    virtual void *getNativeWindow() const = 0;
 
-    [[nodiscard]] virtual int32 getWidth() const = 0;
-    [[nodiscard]] virtual int32 getHeight() const = 0;
-
-    [[nodiscard]] virtual void *getNativeWindow() const = 0;
+    virtual void registerDispatch() = 0;
+    virtual void registerEvents() = 0;
 };
 } // namespace star
 

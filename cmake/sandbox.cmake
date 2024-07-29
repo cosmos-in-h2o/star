@@ -9,7 +9,6 @@ target_sources(sandbox
 target_include_directories(sandbox
         PUBLIC
         include
-        thirdparty/spdlog/include
 )
 target_link_libraries(sandbox
         PRIVATE

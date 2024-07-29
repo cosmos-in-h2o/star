@@ -58,10 +58,5 @@ using uint_t = uint64;
 #endif
 } // namespace star
 
-#ifdef STAR_ENABLE_ASSERTS
-#define STAR_ASSERT(x,...){if(!x){star::Log::engineError("Assertion failed:{0}",__VA_ARGS__);__debugbreak();}}
-#else
-#define STAR_ASSERT(x,...)
-#endif
 
 #endif
