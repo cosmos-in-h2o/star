@@ -1,85 +1,60 @@
-#include <glad/glad.h>
-// order
+#include "star/platform/windows/windows_window.hpp"
+#include "star/core/event/event_dispatcher.hpp"
 #include <GLFW/glfw3.h>
-#include <functional>
-#include <star/core/error/error.hpp>
-#include <star/core/event/event_dispatcher.hpp>
-#include <star/core/event/input_event.hpp>
-#include <star/platform/windows/windows_window.hpp>
 
 namespace star {
-static void GLFWErrorCallback(int error, const char *description) {
-    Log::engineError("GLFW Error ({0}): {1}.", error, description);
-}
-
-static void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-WindowsWindow::WindowsWindow(String title, int32 width, int32 height)
-    : _title(std::move(title)), _width(width), _height(height) {
+WindowsWindow::WindowsWindow(StringView title, int32 width, int32 height)
+    : _title(title), _width(width), _height(height) {
     glfwInit();
-    glfwSetErrorCallback(&GLFWErrorCallback);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef STAR_PLATFORM_MACOS
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
     this->_window = glfwCreateWindow(this->_width, this->_height,
                                      this->_title.c_str(), nullptr, nullptr);
-
-    this->_context = new OpenGLContext(this->_window);
 }
 
-WindowsWindow::~WindowsWindow() = default;
-
-void WindowsWindow::onStart(const Event &e) {
-    glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
-}
-
-void WindowsWindow::onUpdate(const Event &e) {
-    glfwPollEvents();
-    this->_context->swapBuffers();
-}
-
-void WindowsWindow::onDestroy(const Event &e) {
+WindowsWindow::~WindowsWindow() {
     glfwDestroyWindow(this->_window);
     glfwTerminate();
-    if (this->_context) {
-        delete this->_context;
-        this->_context = nullptr;
-    }
-    star::Log::engineInfo("Window was closed.");
 }
 
-int32 WindowsWindow::getWidth() const { return this->_width; }
+void WindowsWindow::clear() {
+    glClear(GL_COLOR_BUFFER_BIT);
+}
 
-int32 WindowsWindow::getHeight() const { return this->_height; }
-
-void *WindowsWindow::getNativeWindow() const { return this->_window; }
-
-void WindowsWindow::registerDispatch() {
-    glfwSetKeyCallback(
-        (GLFWwindow *)this->_window,
-        [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-            switch (action) {
-            case GLFW_PRESS: {
-                KeyPressedEvent event(glfwKeyConvert(key), false);
-                EventDispatcher::dispatchEvent(EventType::KEY_PRESSED, event);
-                break;
-            }
-            case GLFW_RELEASE: {
-                KeyReleasedEvent event(glfwKeyConvert(key));
-                break;
-            }
-            case GLFW_REPEAT: {
-                KeyPressedEvent event(glfwKeyConvert(key), true);
-                break;
-            }
-            default:
-                break;
-            }
+void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
+    glfwSetWindowUserPointer(this->_window, &dispatcher);
+    glfwSetKeyCallback((GLFWwindow *)this->_window, [](GLFWwindow *window,
+                                                       int key, int scancode,
+                                                       int action, int mods) {
+        auto dispatcher =
+            static_cast<EventDispatcher *>(glfwGetWindowUserPointer(window));
+        switch (action) {
+        case GLFW_PRESS: {
+            KeyPressedEvent event(glfwKeyConvert(key), false);
+            dispatcher->dispatchEvent(EventType::KEY_PRESSED, event);
+            break;
+        }
+        case GLFW_RELEASE: {
+            KeyReleasedEvent event(glfwKeyConvert(key));
+            break;
+        }
+        case GLFW_REPEAT: {
+            KeyPressedEvent event(glfwKeyConvert(key), true);
+            break;
+        }
+        default:
+            break;
+        }
+    });
+    glfwSetFramebufferSizeCallback(
+        (GLFWwindow *)_window, [](GLFWwindow *window, int width, int height) {
+            glViewport(0, 0, width, height);
         });
 
-    glfwSetFramebufferSizeCallback(this->_window, &framebufferSizeCallback);
     // glfw event
     /*
     1. 窗口大小改变事件(Window Resize)
@@ -180,18 +155,5 @@ void WindowsWindow::registerDispatch() {
     // width: 新的帧缓冲宽度
     // height: 新的帧缓冲高度
      */
-    Log::engineInfo("Window event registration succeeded. ");
-}
-
-void WindowsWindow::registerEvents() {
-    EventDispatcher::subscribeEvent(EventType::START_EVENT, [this](auto &&e) {
-        this->onStart(std::forward<decltype(e)>(e));
-    });
-    EventDispatcher::subscribeEvent(EventType::UPDATE_EVENT, [this](auto &&e) {
-        this->onUpdate(std::forward<decltype(e)>(e));
-    });
-    EventDispatcher::subscribeEvent(EventType::DESTROY_EVENT, [this](auto &&e) {
-        this->onDestroy(std::forward<decltype(e)>(e));
-    });
 }
 } // namespace star

@@ -294,14 +294,14 @@ enum EventType : uint64 {
     ID = 0xffffffff,
 };
 
-class STAR_API Event {
+class Event {
   public:
     Event();
     virtual ~Event();
     virtual EventType getType();
 };
 
-const Event emptyEvent;
+extern const Event emptyEvent;
 
 REGISTER_CALLBACK_FN(Event)
 } // namespace star

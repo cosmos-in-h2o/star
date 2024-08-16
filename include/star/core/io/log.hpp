@@ -7,49 +7,42 @@
 #include <string>
 
 namespace star {
-class STAR_API Log {
-  public:
-    static void init(const std::string &name);
-    static void renameClient(const std::string &name);
-
-    template <typename... Ts>
-    static void info(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sClientLogger->info(fmt, std::forward<Ts>(msg)...);
-    }
-    template <typename... Ts>
-    static void warn(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sClientLogger->warn(fmt, std::forward<Ts>(msg)...);
-    }
-    template <typename... Ts>
-    static void error(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sClientLogger->error(fmt, std::forward<Ts>(msg)...);
-    }
-    template <typename... Ts>
-    static void engineInfo(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sEngineLogger->info(fmt, std::forward<Ts>(msg)...);
-    }
-    template <typename... Ts>
-    static void engineWarn(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sEngineLogger->warn(fmt, std::forward<Ts>(msg)...);
-    }
-    template <typename... Ts>
-    static void engineError(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
-        _sEngineLogger->error(fmt, std::forward<Ts>(msg)...);
-    }
-
-  private:
-    static std::shared_ptr<spdlog::logger> _sEngineLogger;
-    static std::shared_ptr<spdlog::logger> _sClientLogger;
-};
-
-enum class LogType{
+enum class LogLevel:int {
+    TRACE,
     INFO,
+    DEBUG,
     WARN,
     ERROR_
 };
-enum class LoggerType{
-    CLIENT,
-    ENGINE
+
+class Log {
+  public:
+    static void init(const std::string &name);
+    static void setLevel(LogLevel level);
+
+    template <typename... Ts>
+    static void trace(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
+        _sLogger->trace(fmt, std::forward<Ts>(msg)...);
+    }
+    template <typename... Ts>
+    static void info(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
+        _sLogger->info(fmt, std::forward<Ts>(msg)...);
+    }
+    template <typename... Ts>
+    static void debug(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
+        _sLogger->debug(fmt, std::forward<Ts>(msg)...);
+    }
+    template <typename... Ts>
+    static void warn(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
+        _sLogger->warn(fmt, std::forward<Ts>(msg)...);
+    }
+    template <typename... Ts>
+    static void error(spdlog::format_string_t<Ts...> fmt, Ts &&...msg) {
+        _sLogger->error(fmt, std::forward<Ts>(msg)...);
+    }
+
+  private:
+    static std::shared_ptr<spdlog::logger> _sLogger;
 };
 } // namespace star
 

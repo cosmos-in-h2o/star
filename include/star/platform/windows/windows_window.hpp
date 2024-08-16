@@ -1,34 +1,38 @@
 #ifndef STAR_WINDOWS_WINDOW_HPP
 #define STAR_WINDOWS_WINDOW_HPP
 
-#include <star/core/io/log.hpp>
-#include <star/core/window.hpp>
-#include <star/def.hpp>
-#include <star/platform/opengl/opengl_context.hpp>
+#include "star/core/window.hpp"
+#include "star/function/render/color.hpp"
+#include "star/rtl/string.hpp"
+#include "star/rtl/string_view.hpp"
 
 typedef struct GLFWwindow GLFWwindow;
 
 namespace star {
-class STAR_API WindowsWindow : public Window {
+class WindowsWindow : public Window {
   public:
-    WindowsWindow(String title, int32 width, int32 height);
+    WindowsWindow(StringView title, int32 width, int32 height);
     ~WindowsWindow() override;
 
-    void onStart(const Event &e);
-    void onUpdate(const Event &e);
-    void onDestroy(const Event &e);
+    int32 getWidth() const override { return this->_width; }
+    int32 getHeight() const override { return this->_height; }
+    void *getNativeWindow() const override {
+        return static_cast<void *>(this->_window);
+    };
+    bool shouldClose() const override {
+        return glfwWindowShouldClose(
+            static_cast<GLFWwindow *>(this->getNativeWindow()));
+    }
 
-    int32 getWidth() const override;
-    int32 getHeight() const override;
+    void setBGColor(const Color& color) override{
+        glClearColor(color.r, color.g, color.b, color.a);
+    }
 
-    void *getNativeWindow() const override;
-
-    void registerDispatch() override;
-    void registerEvents() override;
+    void clear() override;
+    void registerDispatch(EventDispatcher& dispatcher) override;
 
   private:
-    GLFWwindow *_window;
-    GraphicsContext *_context;
+    GLFWwindow *_window{};
     String _title;
     int32 _width, _height;
 };

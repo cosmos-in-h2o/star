@@ -1,5 +1,5 @@
-#include <star/core/event/event_dispatcher.hpp>
-#include <star/core/io/log.hpp>
+#include "star/core/event/event_dispatcher.hpp"
+#include "star/core/io/log.hpp"
 #include <utility>
 
 namespace star {
@@ -21,125 +21,155 @@ bool EventDispatcher::OrderCallable::operator>(
     return this->order > other.order;
 }
 
-HashMap<uint64, List<EventDispatcher::OrderCallable>>
-    EventDispatcher::_listeners;
-HashMap<uint64, List<EventDispatcher::OrderCallable>>
-    EventDispatcher::_shortListeners;
-std::shared_mutex EventDispatcher::_mutex;
-std::shared_mutex EventDispatcher::_mutex2;
+EventDispatcher::EventDispatcher() {
+    this->_listeners = HashMap<uint64, List<EventDispatcher::OrderCallable>>();
+    this->_shortListeners =
+        HashMap<uint64, List<EventDispatcher::OrderCallable>>();
+    Log::trace("Event dispatcher is initialized.");
+}
 
-void EventDispatcher::init() {
-    _listeners = HashMap<uint64, List<EventDispatcher::OrderCallable>>();
-    _shortListeners = HashMap<uint64, List<EventDispatcher::OrderCallable>>();
-    Log::engineInfo("Event dispatcher is initialized.");
+EventDispatcher::~EventDispatcher() = default;
+
+void EventDispatcher::subscribeEvent(uint64 id, const EventCb &callback,
+                                     EventOrder order) {
+    std::unique_lock<std::mutex> lock(_mutex);
+    this->_listeners[id].emplace_back(order, callback);
+}
+
+void EventDispatcher::dispatchEvent(uint64 id, const Event &event) {
+    auto it = this->_listeners.find(id);
+    if (it != this->_listeners.end()) {
+        for (const auto &obj : it->second) {
+            obj.callable(event);
+        }
+    }
+}
+
+void EventDispatcher::removeListener(uint64 id) {
+    std::unique_lock<std::mutex> lock(_mutex);
+    this->_listeners.erase(id);
+}
+
+void EventDispatcher::removeListener(const EventCb &callback) {
+    std::unique_lock<std::mutex> lock(_mutex);
+    for (auto &[k, v] : this->_listeners) {
+        v.erase(std::remove_if(v.begin(), v.end(),
+                               [&callback](const OrderCallable &obj) {
+                                   return obj.callable.target_type() ==
+                                          callback.target_type();
+                               }),
+                v.end());
+    }
+}
+
+void EventDispatcher::removeListener(uint64 id, const EventCb &callback) {
+    std::unique_lock<std::mutex> lock(_mutex);
+    auto it = this->_listeners.find(id);
+    if (it != this->_listeners.end()) {
+        auto &callbacks = it->second;
+        callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
+                                       [&callback](const OrderCallable &obj) {
+                                           return obj.callable.target_type() ==
+                                                  callback.target_type();
+                                       }),
+                        callbacks.end());
+    }
+}
+
+void EventDispatcher::subscribeShortEvent(uint64 id, const EventCb &callback,
+                                          EventOrder order) {
+    std::unique_lock<std::mutex> lock(_mutex2);
+    this->_shortListeners[id].emplace_back(order, callback);
+}
+
+void EventDispatcher::dispatchShortEvent(uint64 id, const Event &event) {
+    auto it = this->_shortListeners.find(id);
+    if (it != this->_shortListeners.end()) {
+        for (const auto &obj : it->second) {
+            obj.callable(event);
+        }
+    }
+    removeShortListener(id);
+}
+
+void EventDispatcher::removeShortListener(uint64 id) {
+    std::unique_lock<std::mutex> lock(_mutex2);
+    this->_shortListeners.erase(id);
+}
+
+void EventDispatcher::removeShortListener(const EventCb &callback) {
+    std::unique_lock<std::mutex> lock(_mutex2);
+    for (auto &[k, v] : this->_shortListeners) {
+        v.erase(std::remove_if(v.begin(), v.end(),
+                               [&callback](const OrderCallable &obj) {
+                                   return obj.callable.target_type() ==
+                                          callback.target_type();
+                               }),
+                v.end());
+    }
+}
+
+void EventDispatcher::removeShortListener(uint64 id, const EventCb &callback) {
+    std::unique_lock<std::mutex> lock(_mutex2);
+    auto it = this->_shortListeners.find(id);
+    if (it != this->_shortListeners.end()) {
+        auto &callbacks = it->second;
+        callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
+                                       [&callback](const OrderCallable &obj) {
+                                           return obj.callable.target_type() ==
+                                                  callback.target_type();
+                                       }),
+                        callbacks.end());
+    }
 }
 
 void EventDispatcher::subscribeEvent(EventType type, const EventCb &callback,
                                      EventOrder order) {
-    std::unique_lock<std::shared_mutex> lock(_mutex);
-    _listeners[static_cast<uint64>(type)].emplace_back(order, callback);
+    this->subscribeEvent(static_cast<uint64>(type), callback, order);
 }
 
 void EventDispatcher::dispatchEvent(EventType type, const Event &event) {
-    auto it = _listeners.find(static_cast<uint64>(type));
-    if (it != _listeners.end()) {
-        for (const auto &obj : it->second) {
-            obj.callable(event);
-        }
-    }
+    this->dispatchEvent(static_cast<uint64>(type), event);
 }
 
 void EventDispatcher::removeListener(EventType type) {
-    std::unique_lock<std::shared_mutex> lock(_mutex);
-    _listeners.erase(static_cast<uint64>(type));
-}
-
-void EventDispatcher::removeListener(const EventCb &callback) {
-    std::unique_lock<std::shared_mutex> lock(_mutex);
-    for (auto &[k, v] : _listeners) {
-        v.erase(std::remove_if(v.begin(), v.end(),
-                               [&callback](const OrderCallable &obj) {
-                                   return obj.callable.target_type() ==
-                                          callback.target_type();
-                               }),
-                v.end());
-    }
+    this->removeListener(static_cast<uint64>(type));
 }
 
 void EventDispatcher::removeListener(EventType type, const EventCb &callback) {
-    std::unique_lock<std::shared_mutex> lock(_mutex);
-    auto it = _listeners.find(static_cast<uint64>(type));
-    if (it != _listeners.end()) {
-        auto &callbacks = it->second;
-        callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
-                                       [&callback](const OrderCallable &obj) {
-                                           return obj.callable.target_type() ==
-                                                  callback.target_type();
-                                       }),
-                        callbacks.end());
-    }
+    this->removeListener(static_cast<uint64>(type), callback);
 }
 
-void EventDispatcher::shortSubscribeEvent(EventType type,
+void EventDispatcher::subscribeShortEvent(EventType type,
                                           const EventCb &callback,
                                           EventOrder order) {
-    std::unique_lock<std::shared_mutex> lock(_mutex2);
-    _shortListeners[static_cast<uint64>(type)].emplace_back(order, callback);
+    this->subscribeShortEvent(static_cast<uint64>(type), callback, order);
 }
 
 void EventDispatcher::dispatchShortEvent(EventType type, const Event &event) {
-    auto it = _shortListeners.find(static_cast<uint64>(type));
-    if (it != _shortListeners.end()) {
-        for (const auto &obj : it->second) {
-            obj.callable(event);
-        }
-    }
-    removeShortListener(type);
+    this->dispatchShortEvent(static_cast<uint64>(type), event);
 }
 
 void EventDispatcher::removeShortListener(EventType type) {
-    std::unique_lock<std::shared_mutex> lock(_mutex2);
-    _shortListeners.erase(static_cast<uint64>(type));
-}
-
-void EventDispatcher::removeShortListener(const EventCb &callback) {
-    std::unique_lock<std::shared_mutex> lock(_mutex2);
-    for (auto &[k, v] : _shortListeners) {
-        v.erase(std::remove_if(v.begin(), v.end(),
-                               [&callback](const OrderCallable &obj) {
-                                   return obj.callable.target_type() ==
-                                          callback.target_type();
-                               }),
-                v.end());
-    }
+    this->removeShortListener(static_cast<uint64>(type));
 }
 
 void EventDispatcher::removeShortListener(EventType type,
                                           const EventCb &callback) {
-    std::unique_lock<std::shared_mutex> lock(_mutex2);
-    auto it = _shortListeners.find(static_cast<uint64>(type));
-    if (it != _shortListeners.end()) {
-        auto &callbacks = it->second;
-        callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
-                                       [&callback](const OrderCallable &obj) {
-                                           return obj.callable.target_type() ==
-                                                  callback.target_type();
-                                       }),
-                        callbacks.end());
-    }
+    this->removeShortListener(static_cast<uint64>(type), callback);
 }
 
 void EventDispatcher::sortEvents() {
-    for (auto &pair : _listeners){
+    for (auto &pair : _listeners) {
         sort(pair.second.begin(), pair.second.end(),
              [](const OrderCallable &a, const OrderCallable &b) {
-               return a.order > b.order;
+                 return a.order > b.order;
              });
     }
-    for (auto &pair : _shortListeners){
+    for (auto &pair : _shortListeners) {
         sort(pair.second.begin(), pair.second.end(),
              [](const OrderCallable &a, const OrderCallable &b) {
-               return a.order > b.order;
+                 return a.order > b.order;
              });
     }
 }

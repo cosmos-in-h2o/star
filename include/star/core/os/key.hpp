@@ -1,8 +1,8 @@
 #ifndef STAR_KEY_HPP
 #define STAR_KEY_HPP
 
+#include "star/def.hpp"
 #include <GLFW/glfw3.h>
-#include <star/def.hpp>
 
 namespace star {
 // class from godot

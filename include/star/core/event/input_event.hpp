@@ -5,7 +5,7 @@
 #include <star/core/os/key.hpp>
 
 namespace star {
-class STAR_API KeyEvent : public Event {
+class KeyEvent : public Event {
   public:
     explicit KeyEvent(Key key);
     Key getKeyCode() const;
@@ -14,7 +14,7 @@ class STAR_API KeyEvent : public Event {
     Key _key;
 };
 
-class STAR_API KeyPressedEvent : public KeyEvent {
+class KeyPressedEvent : public KeyEvent {
   public:
     explicit KeyPressedEvent(Key key, bool isRepeat = false);
     EventType getType() override;
@@ -24,13 +24,13 @@ class STAR_API KeyPressedEvent : public KeyEvent {
     bool _isRepeat;
 };
 
-class STAR_API  KeyReleasedEvent : public KeyEvent {
+class KeyReleasedEvent : public KeyEvent {
   public:
     explicit KeyReleasedEvent(Key key);
     EventType getType() override;
 };
 
-class STAR_API KeyTypedEvent : public KeyEvent {
+class KeyTypedEvent : public KeyEvent {
   public:
     explicit KeyTypedEvent(Key key);
     EventType getType() override;

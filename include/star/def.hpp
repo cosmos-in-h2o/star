@@ -3,16 +3,6 @@
 
 #include <limits>
 
-#ifdef _WIN32
-#ifdef STAR_DLL_EXPORT
-#define STAR_API __declspec(dllexport)
-#else
-#define STAR_API __declspec(dllimport)
-#endif
-#else
-#define STAR_API
-#endif
-
 namespace star {
 using int8 = signed char;
 using int16 = signed short int;
@@ -49,6 +39,7 @@ constexpr float64 float64_min = (std::numeric_limits<float64>::min)();
 constexpr float64 float64_max = (std::numeric_limits<float64>::max)();
 constexpr float128 float128_min = (std::numeric_limits<float128>::min)();
 constexpr float128 float128_max = (std::numeric_limits<float128>::max)();
+
 #if __SIZEOF_POINTER__ == 4
 using int_t = int32;
 using uint_t = uint32;
@@ -58,5 +49,6 @@ using uint_t = uint64;
 #endif
 } // namespace star
 
+#define STAR_ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 #endif

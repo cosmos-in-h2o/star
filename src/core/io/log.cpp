@@ -2,16 +2,16 @@
 #include <star/core/io/log.hpp>
 
 namespace star {
-std::shared_ptr<spdlog::logger> Log::_sEngineLogger;
-std::shared_ptr<spdlog::logger> Log::_sClientLogger;
+std::shared_ptr<spdlog::logger> Log::_sLogger{};
 
 void Log::init(const std::string &name) {
-    spdlog::set_pattern("%^[%T] %n: %v%$");
-    _sEngineLogger = spdlog::stdout_color_st("Star");
-    Log::engineInfo("The Engine logger is initialized.");
-    _sClientLogger = spdlog::stdout_color_st(name);
-    Log::engineInfo("The App logger is initialized.");
+    spdlog::set_pattern("%^%H:%M:%S:%e [%1!L] - %v%$");
+    _sLogger = spdlog::stdout_color_st(name);
+    setLevel(LogLevel::TRACE);
+    Log::trace("The logger is initialized.");
 }
 
-void Log::renameClient(const std::string &name) { return; }
+void Log::setLevel(LogLevel level) {
+    _sLogger->set_level(static_cast<spdlog::level::level_enum>(level));
+}
 } // namespace star
