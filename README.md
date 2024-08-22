@@ -4,11 +4,20 @@
 
 ## build
 
+requirements list:
+
+- python
+- cmake
+- ninja(or make,msbuild...)
+- vcpkg(if windows)
+
 ### install requirements
 
 ```bash
 vcpkg install tbb
 ```
+
+If linux or macos,you can use corresponding package manager to install tbb.
 
 ### edit build file
 
@@ -16,17 +25,11 @@ Change build.py file.
 For example:
 
 ```python
-import os
-
-# enter target which you want to build
-target = "star"
-# enter your tool chain directory
-toolchaindir = "/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
-
-if not os.path.exists("build"):
-    os.makedirs("build")
-os.system(
-    f"cmake -G Ninja -B ./build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE={toolchaindir} && cmake  --build ./build --target {target}")
+# add these code
+star = Target()
+star.name = "star"
+# if linux or macos,you can enter empty string
+star.toolchain = "/path/to/your/vcpkg/scripts/buildsystems/vcpkg.cmake"
 ```
 
 ### enter command
