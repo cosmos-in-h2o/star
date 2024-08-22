@@ -11,11 +11,11 @@ typedef struct GLFWwindow GLFWwindow;
 namespace star {
 class WindowsWindow : public Window {
   public:
-    WindowsWindow(StringView title, int32 width, int32 height);
+    WindowsWindow(StringView title, int32_t width, int32_t height);
     ~WindowsWindow() override;
 
-    int32 getWidth() const override { return this->_width; }
-    int32 getHeight() const override { return this->_height; }
+    int32_t getWidth() const override { return this->_width; }
+    int32_t getHeight() const override { return this->_height; }
     void *getNativeWindow() const override {
         return static_cast<void *>(this->_window);
     };
@@ -24,17 +24,20 @@ class WindowsWindow : public Window {
             static_cast<GLFWwindow *>(this->getNativeWindow()));
     }
 
-    void setBGColor(const Color& color) override{
+    void setBGColor(const Color &color) override {
         glClearColor(color.r, color.g, color.b, color.a);
     }
 
     void clear() override;
-    void registerDispatch(EventDispatcher& dispatcher) override;
+    void registerDispatch(EventDispatcher &dispatcher) override;
+
+    uint32_t VSync() override { return 0; }
 
   private:
+    void registerCallback();
     GLFWwindow *_window{};
     String _title;
-    int32 _width, _height;
+    int32_t _width, _height;
 };
 } // namespace star
 

@@ -5,7 +5,7 @@ Event::Event() = default;
 
 Event::~Event() = default;
 
-EventType Event::getType() { return EventType::UNKNOWN; }
+EventType Event::getType()const { return EventType::UNKNOWN; }
 
 const Event emptyEvent{};
 } // namespace star

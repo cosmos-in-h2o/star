@@ -6,10 +6,13 @@
 
 namespace star {
 struct Transform2D : public Component {
-    vec2 position{0.0f,0.0f};
-    vec2 scale{0.0,0.0};
-    float32 rotation=0.0f;
-    float32 skew=0.0f;
+    vec2 position{0.0f, 0.0f};
+    vec2 scale{1.0, 1.0};
+    float rotation = 0.0f;
+
+    mat4 &getModelMatrix();
+  private:
+    mat4 _modelMatrix;
 };
 } // namespace star
 

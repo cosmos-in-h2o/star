@@ -17,7 +17,7 @@ enum class ErrorType {
 struct Error {
     ErrorType type{};
     String file{};
-    uint32 line{};
+    uint32_t line{};
 };
 
 // 用于处理错误

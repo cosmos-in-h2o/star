@@ -9,8 +9,8 @@ class IndexBuffer {
     IndexBuffer(const void *indices, GLsizeiptr size);
     ~IndexBuffer();
 
-    void Bind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferID); }
-    void Unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+    void bind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferID); }
+    void unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
 
   private:
     GLuint _bufferID{};

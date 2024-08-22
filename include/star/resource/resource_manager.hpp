@@ -28,6 +28,7 @@ template <class T> class Ref {
     ~Ref();
 
     T *get() const;
+    void unref();
 
     Ref<T> &operator=(const Ref<T> &ref);
     Ref<T> &operator=(Ref<T> &&ref) noexcept;
@@ -49,14 +50,21 @@ class ResourceManager {
     // 将资源交由管理器管理，若重名则覆盖原来的资源
     template <class RT>
     static Ref<RT> loadResource(const String &name, Resource *resource);
+    template <class RT>
+    static Ref<RT> emplaceLoadResource(const String &name, auto &&...args);
     // 将静态资源交由管理器，若重名则报错
     template <class RT>
     static RT *loadStaticResource(const String &name, Resource *resource);
+    template <class RT>
+    static RT *emplaceLoadStaticResource(const String &name, auto &&...args);
 
     // 将资源交由管理器管理，若重名则直接获取原来的资源
     template <class RT>
     static Ref<RT> loadResourceWithoutUpdate(const String &name,
                                              Resource *resource);
+    template <class RT>
+    static Ref<RT> emplaceLoadResourceWithoutUpdate(const String &name,
+                                                    auto &&...args);
 
     template <class RT> static Ref<RT> getResource(const String &name);
     template <class RT> static RT *getStaticResource(const String &name);
@@ -66,12 +74,14 @@ class ResourceManager {
     static void init();
     static void close();
 
-    static void collectGarbage();
-    static bool isCollect(ResourceInfo &info);
+    static void garbageCollect();
+    static void staticCollect(const String &name);
 
     static RemoveResourceFunc removeResourceFunc;
 
   private:
+    static bool isCollect(ResourceInfo &info);
+
     static HashMap<String, ResourceInfo> _resourceData;
     static HashMap<String, Resource *> _staticResourceData;
 
@@ -100,7 +110,7 @@ template <class T> Ref<T>::Ref(const Ref<T> &ref) {
 template <class T> Ref<T>::Ref(Ref<T> &&ref) noexcept {
     this->_resource = ref._resource;
     this->_refCount = ref._refCount;
-    this->_name = std::move(ref._name);
+    this->_name = ref._name;
 
     ref._resource = nullptr;
     ref._refCount = nullptr;
@@ -113,10 +123,25 @@ template <class T> Ref<T>::~Ref() {
                                             ResourceManager::_resourceData,
                                             _name);
     }
+    _resource = nullptr;
+    _refCount = nullptr;
+    _name = StringView{};
 }
 
 template <class T> T *Ref<T>::get() const {
     return static_cast<T *>(_resource);
+}
+
+template <class T> void Ref<T>::unref() {
+    if (_resource && ResourceManager::removeResourceFunc && !_name.empty() &&
+        _refCount->decrement() == 0) {
+        ResourceManager::removeResourceFunc(ResourceManager::_collectList,
+                                            ResourceManager::_resourceData,
+                                            _name);
+    }
+    _resource = nullptr;
+    _refCount = nullptr;
+    _name = StringView{};
 }
 
 template <class T> Ref<T> &Ref<T>::operator=(const Ref<T> &ref) {
@@ -136,6 +161,7 @@ template <class T> Ref<T> &Ref<T>::operator=(const Ref<T> &ref) {
 }
 
 template <class T> Ref<T> &Ref<T>::operator=(Ref<T> &&ref) noexcept {
+
     if (this == &ref) {
         return *this;
     }
@@ -173,11 +199,13 @@ Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
         ResourceInfo info(resource);
         info.refCount.increment();
         _resourceData[name] = info;
-        return Ref<RT>(_resourceData[name], name);
+        auto pair = _resourceData.find(name);
+        return Ref<RT>(pair->second, pair->first);
     }
     // 找到了更新
     // 当要加载的资源就是现在所持有的资源时
     if (resource == it->second.resource) {
+        it->second.refCount.increment();
         return Ref<RT>(it->second, it->first);
     }
     // 若传入空指针则代表需要删除这个资源
@@ -192,6 +220,13 @@ Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
     it->second.refCount.increment();
 
     return Ref<RT>(it->second, it->first);
+}
+
+template <class RT>
+Ref<RT> ResourceManager::emplaceLoadResource(const String &name,
+                                             auto &&...args) {
+    Resource *res = new RT(std::forward<decltype(args)>(args)...);
+    return loadResource<RT>(name, res);
 }
 
 template <class RT>
@@ -215,6 +250,13 @@ RT *ResourceManager::loadStaticResource(const String &name,
 }
 
 template <class RT>
+RT *ResourceManager::emplaceLoadStaticResource(const String &name,
+                                               auto &&...args) {
+    Resource *res = new RT(std::forward<decltype(args)>(args)...);
+    return loadStaticResource<RT>(name, res);
+}
+
+template <class RT>
 Ref<RT> ResourceManager::loadResourceWithoutUpdate(const String &name,
                                                    Resource *resource) {
     std::unique_lock<std::mutex> uniqueLock(_mutex);
@@ -228,7 +270,8 @@ Ref<RT> ResourceManager::loadResourceWithoutUpdate(const String &name,
         ResourceInfo info(resource);
         info.refCount.increment();
         _resourceData[name] = info;
-        return Ref<RT>(_resourceData[name], name);
+        auto pair = _resourceData.find(name);
+        return Ref<RT>(pair->second, pair->first);
     }
     // 找到了就直接获取
     // 若传入空指针则代表需要删除这个资源
@@ -239,6 +282,14 @@ Ref<RT> ResourceManager::loadResourceWithoutUpdate(const String &name,
     }
     it->second.refCount.increment();
     return Ref<RT>(it->second, it->first);
+}
+
+template <class RT>
+Ref<RT> ResourceManager::emplaceLoadResourceWithoutUpdate(const String &name,
+                                                          auto &&...args) {
+
+    Resource *res = new RT(std::forward<decltype(args)>(args)...);
+    return loadResourceWithoutUpdate<RT>(name, res);
 }
 
 template <class RT> Ref<RT> ResourceManager::getResource(const String &name) {

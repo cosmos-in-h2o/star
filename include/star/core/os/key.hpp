@@ -230,6 +230,10 @@ enum class KeyModifierMask {
     KPAD = (1 << 29),
     GROUP_SWITCH = (1 << 30)
 };
+enum class MouseButton {
+    LEFT,
+
+};
 
 constexpr Key glfwKeyConvert(int glfw_key) {
     switch (glfw_key) {
@@ -446,7 +450,7 @@ constexpr Key glfwKeyConvert(int glfw_key) {
     }
 }
 
-constexpr int32 starKeyConvert(Key star_key) {
+constexpr int32_t starKeyConvert(Key star_key) {
     switch (star_key) {
     case Key::SPACE:
         return GLFW_KEY_SPACE;

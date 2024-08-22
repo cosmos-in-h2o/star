@@ -20,10 +20,13 @@ else ()
 endif ()
 
 # 直接放在项目内部的库
-include(cmake/imgui.cmake)
+add_subdirectory(thirdparty/imgui)
 add_subdirectory(thirdparty/glad)
 add_subdirectory(thirdparty/glfw)
+add_subdirectory(thirdparty/yaml-cpp)
 # 外部库引入
+find_package(TBB CONFIG REQUIRED)
+
 add_library(star STATIC)
 
 file(GLOB_RECURSE STAR_SOURCE_FILES
@@ -40,6 +43,7 @@ target_include_directories(star
         thirdparty/glm/include
         thirdparty/entt/include
         thirdparty/atomic_queue/include
+        thirdparty/stb/include
 )
 target_compile_definitions(star
         PRIVATE
@@ -51,7 +55,29 @@ target_link_libraries(star
         glfw
         glad
         opengl32
+        yaml-cpp
+        TBB::tbb
+        TBB::tbbmalloc
+        TBB::tbbmalloc_proxy
 )
+
+add_executable(StarEditor)
+file(GLOB_RECURSE STAR_EDITOR_SOURCE_FILES
+        star_editor/*.cpp
+)
+target_sources(StarEditor
+        PRIVATE
+        ${STAR_EDITOR_SOURCE_FILES}
+)
+target_include_directories(StarEditor
+        PRIVATE
+        star_editor
+)
+target_link_libraries(StarEditor
+        PRIVATE
+        star
+)
+
 include(cmake/sandbox.cmake)
 
 # test

@@ -17,7 +17,7 @@ class KeyEvent : public Event {
 class KeyPressedEvent : public KeyEvent {
   public:
     explicit KeyPressedEvent(Key key, bool isRepeat = false);
-    EventType getType() override;
+    EventType getType() const override;
     bool isRepeat() const;
 
   private:
@@ -27,13 +27,13 @@ class KeyPressedEvent : public KeyEvent {
 class KeyReleasedEvent : public KeyEvent {
   public:
     explicit KeyReleasedEvent(Key key);
-    EventType getType() override;
+    EventType getType()const override;
 };
 
 class KeyTypedEvent : public KeyEvent {
   public:
     explicit KeyTypedEvent(Key key);
-    EventType getType() override;
+    EventType getType() const override;
 };
 
 REGISTER_CALLBACK_FN(KeyEvent)

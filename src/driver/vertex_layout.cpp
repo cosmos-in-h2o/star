@@ -1,90 +1,269 @@
 #include "star/driver/opengl/vertex_layout.hpp"
 
 namespace star {
-uint32_t shaderDataTypeSize(ShaderDataType type) {
-    switch (type) {
-    case ShaderDataType::Float:
-        return 4;
-    case ShaderDataType::Float2:
-        return 4 * 2;
-    case ShaderDataType::Float3:
-        return 4 * 3;
-    case ShaderDataType::Float4:
-        return 4 * 4;
-    case ShaderDataType::Mat3:
-        return 4 * 3 * 3;
-    case ShaderDataType::Mat4:
-        return 4 * 4 * 4;
-    case ShaderDataType::Int:
-        return 4;
-    case ShaderDataType::Int2:
-        return 4 * 2;
-    case ShaderDataType::Int3:
-        return 4 * 3;
-    case ShaderDataType::Int4:
-        return 4 * 4;
-    case ShaderDataType::Bool:
-        return 1;
-    default:
-        return 0;
-    }
-}
+void vertexAttribBind(VertexLayout layout) {
+    switch (layout) {
+    case VertexLayout::P3fC4fT2f: {
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
 
-uint32_t getComponentCount(ShaderDataType type) {
-    switch (type) {
-    case ShaderDataType::Float:
-        return 1;
-    case ShaderDataType::Float2:
-        return 2;
-    case ShaderDataType::Float3:
-        return 3;
-    case ShaderDataType::Float4:
-        return 4;
-    case ShaderDataType::Mat3:
-        return 3 * 3;
-    case ShaderDataType::Mat4:
-        return 4 * 4;
-    case ShaderDataType::Int:
-        return 1;
-    case ShaderDataType::Int2:
-        return 2;
-    case ShaderDataType::Int3:
-        return 3;
-    case ShaderDataType::Int4:
-        return 4;
-    case ShaderDataType::Bool:
-        return 1;
-    default:
-        return 0;
-    }
-}
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                              (void *)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
 
-GLenum shaderDataTypeToOpenGLBaseType(ShaderDataType type) {
-    switch (type) {
-    case star::ShaderDataType::Float:
-        return GL_FLOAT;
-    case star::ShaderDataType::Float2:
-        return GL_FLOAT;
-    case star::ShaderDataType::Float3:
-        return GL_FLOAT;
-    case star::ShaderDataType::Float4:
-        return GL_FLOAT;
-    case star::ShaderDataType::Mat3:
-        return GL_FLOAT;
-    case star::ShaderDataType::Mat4:
-        return GL_FLOAT;
-    case star::ShaderDataType::Int:
-        return GL_INT;
-    case star::ShaderDataType::Int2:
-        return GL_INT;
-    case star::ShaderDataType::Int3:
-        return GL_INT;
-    case star::ShaderDataType::Int4:
-        return GL_INT;
-    case star::ShaderDataType::Bool:
-        return GL_BOOL;
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                              (void *)(7 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P3fT2f: {
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                              (void *)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3fC4f: {
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float),
+                              (void *)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3f: {
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
+
+    case VertexLayout::P2fC4fT2f: {
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                              (void *)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                              (void *)(6 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P2fT2f: {
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                              (void *)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2fC4f: {
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                              (void *)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2f: {
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
+
+    case VertexLayout::P3iC4fT2f: {
+        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE,
+                              3 * sizeof(int) + 6 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(int) + 6 * sizeof(float),
+                              (void *)(3 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(int) + 6 * sizeof(float),
+                              (void *)(3 * sizeof(int) + 4 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P3iT2f: {
+        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE,
+                              3 * sizeof(int) + 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(int) + 2 * sizeof(float),
+                              (void *)(3 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3iC4f: {
+        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE,
+                              3 * sizeof(int) + 4 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(int) + 4 * sizeof(float),
+                              (void *)(3 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3i: {
+        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
+
+    case VertexLayout::P2iC4fT2f: {
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE,
+                              2 * sizeof(int) + 6 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(int) + 6 * sizeof(float),
+                              (void *)(2 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(int) + 6 * sizeof(float),
+                              (void *)(2 * sizeof(int) + 4 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P2iT2f: {
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE,
+                              2 * sizeof(int) + 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(int) + 2 * sizeof(float),
+                              (void *)(2 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2iC4f: {
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE,
+                              2 * sizeof(int) + 4 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(int) + 4 * sizeof(float),
+                              (void *)(2 * sizeof(int)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2i: {
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE, 2 * sizeof(int), nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
+
+    case VertexLayout::P3dC4fT2f: {
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE,
+                              3 * sizeof(double) + 6 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(double) + 6 * sizeof(float),
+                              (void *)(3 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(int) + 6 * sizeof(float),
+                              (void *)(3 * sizeof(double) + 4 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P3dT2f: {
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE,
+                              3 * sizeof(double) + 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(double) + 2 * sizeof(float),
+                              (void *)(3 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3dC4f: {
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE,
+                              3 * sizeof(double) + 4 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(double) + 4 * sizeof(float),
+                              (void *)(3 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P3d: {
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 3 * sizeof(double),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
+
+    case VertexLayout::P2dC4fT2f: {
+        glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE,
+                              2 * sizeof(double) + 6 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(double) + 6 * sizeof(float),
+                              (void *)(2 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(double) + 6 * sizeof(float),
+                              (void *)(2 * sizeof(double) + 4 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        break;
+    }
+    case VertexLayout::P2dT2f: {
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE,
+                              2 * sizeof(double) + 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(double) + 2 * sizeof(float),
+                              (void *)(2 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2dC4f: {
+        glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE,
+                              2 * sizeof(double) + 4 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
+                              2 * sizeof(double) + 4 * sizeof(float),
+                              (void *)(2 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+        break;
+    }
+    case VertexLayout::P2d: {
+        glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 2 * sizeof(double),
+                              nullptr);
+        glEnableVertexAttribArray(0);
+        break;
+    }
     default:
-        return 0;
+        break;
     }
 }
-}
+} // namespace star

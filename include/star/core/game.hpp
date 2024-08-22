@@ -3,27 +3,32 @@
 
 #include "star/core/ecs/scene.hpp"
 #include "star/core/event/event_dispatcher.hpp"
-#include "star/core/window.hpp"
 #include "star/core/io/log.hpp"
+#include "star/core/window.hpp"
 #include "star/def.hpp"
+#include "star/rtl/hash_map.hpp"
 #include "star/rtl/string.hpp"
 #include "star/rtl/string_view.hpp"
 
 namespace star {
 class Game {
+    using PairT = std::pair<String, Scene *>;
+
   public:
-    static void init(StringView name,Window *window,Scene*scene);
+    static void init(StringView name, Window *window);
     static void close();
-    static void loadScene(Scene *scene);
+    static void addScene(const String &name, Scene *scene);
+    static void loadScene(const String &name);
+    static void loadSceneWithoutUnload(const String &name);
+    static void upload(const String &name);
     static Window *getWindow();
     static Scene *getActiveScene();
-    static EventDispatcher &getDispatcher();
 
   private:
-    static Window *_sWindow;
-    static Scene *_sActiveScene;
-    static String _sName;
-    static EventDispatcher &_sDispatcher();
+    static Window *_window;
+    static PairT _activeScene;
+    static String _name;
+    static HashMap<String, Scene *> _scenes;
 };
 } // namespace star
 

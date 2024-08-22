@@ -8,11 +8,11 @@ class Component{
   public:
     Component();
     virtual ~Component();
-    uint64 getId() const;
+    uint64_t getId() const;
 
   private:
-    static uint64 assignId();
-    uint64 _id{};
+    static uint64_t assignId();
+    uint64_t _id{};
 
 };
 }

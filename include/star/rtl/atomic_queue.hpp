@@ -5,7 +5,7 @@
 
 namespace star{
 template<class T,size_t size>
-using SafeQueue=atomic_queue::AtomicQueue<T,size>;
+using AtomicQueue=atomic_queue::AtomicQueue<T,size>;
 }
 
 #endif // STAR_SAFE_QUEUE_HPP

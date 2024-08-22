@@ -1,49 +1,67 @@
 #include "star/driver/opengl/gl_common.hpp"
 // order
-#include "star/core/game.hpp"
 #include "star/core/io/log.hpp"
-#include "star/driver/opengl/index_buffer.hpp"
 #include "star/driver/opengl/opengl_context.hpp"
-#include "star/driver/opengl/vertex_array.hpp"
-#include "star/driver/opengl/vertex_buffer.hpp"
 #include "star/driver/opengl/vertex_layout.hpp"
+#include "star/ecs/component/camera2d.hpp"
+#include "star/ecs/component/sprite.hpp"
 #include "star/function/filesystem/path.hpp"
-#include "star/function/render/shader.hpp"
+#include "star/function/render/material2d.hpp"
 #include "star/platform/windows/windows_window.hpp"
-#include "star/resource/loader.hpp"
-#include "star/resource/resource_manager.hpp"
+#include "star/rtl/map.hpp"
+#include "star/tool/imgui/imgui.hpp"
+#include <fstream>
+#include <yaml-cpp/yaml.h>
 
 int main(int argc, char **argv) {
     star::Log::init("Logger");
-    star::ResourceManagerGuard guard;
+
     star::Window *window = new star::WindowsWindow("sandbox", 1280, 720);
     star::OpenGLContext context(window);
-    star::Scene scene;
-    star::Game::init("sandbox", window, &scene);
     star::Path::init("D:/program/star/");
 
-    float squareVertices[3 * 4] = {-0.75f, -0.75f, 0.0f, 0.75f,  -0.75f, 0.0f,
-                                   0.75f,  0.75f,  0.0f, -0.75f, 0.75f,  0.0f};
-    uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0}; // 索引数据
+    star::ImGUI::init(window);
 
-    star::VertexBuffer vertexBuffer(squareVertices, sizeof(squareVertices));
-    star::IndexBuffer indexBuffer(squareIndices, sizeof(squareIndices));
-    star::VertexArray vertexArray;
-    vertexArray.AddVertexBuffer(vertexBuffer, 0, 3*4*4, GL_FLOAT, GL_FALSE,
-                                3 * 4, nullptr);
-    vertexArray.AddIndexBuffer(indexBuffer);
-    star::Shader shader("res://shader/vertex.vert",
-                        "res://shader/fragment.frag");
+    star::ResourceManager::init();
+    star::Transform2D cameraTransform;
+    star::Camera2D camera;
+    camera.transform = &cameraTransform;
+
+    auto texture = star::ResourceManager::loadResource<star::Texture2D>(
+        "texture", star::Loader::loadTexture2D(
+                       "res://star_editor/resource/background.png"));
+
+    star::Transform2D transform;
+    star::Sprite sprite;
+    sprite.size = star::vec2{1920, 1080};
+    sprite.transform = &transform;
+    sprite.shader =
+        star::ResourceManager::emplaceLoadStaticResource<star::Shader>(
+            "shader1", "res://resource/shader/vertex.vert",
+            "res://resource/shader/fragment.frag");
+    sprite.texture =
+        star::ResourceManager::emplaceLoadStaticResource<star::GLTexture2D>(
+            "glTexture2D", *texture);
+    sprite.bindVertex();
 
     while (!window->shouldClose()) {
         glfwPollEvents();
         context.swapBuffer();
         window->clear();
-        vertexArray.Bind();
-        shader.use();
-        glDrawElements(GL_ELEMENT_ARRAY_BUFFER, 5, GL_UNSIGNED_INT, nullptr);
+        star::ImGUI::begin();
+        ImGui::Begin((const char *)u8"窗口");
+        ImGui::SliderFloat2("Position", star::value_ptr(transform.position),
+                            -1024, 1024);
+        ImGui::SliderFloat("Rotation", &transform.rotation, -360, 360);
+        ImGui::SliderFloat2("Scale", star::value_ptr(transform.scale), -32, 32);
+        ImGui::ColorEdit4("color", star::value_ptr(sprite.color));
+        ImGui::End();
+        sprite.draw(camera.getViewProjectionMat());
+        star::ImGUI::end();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
+    star::ImGUI::close();
     delete window;
+    star::ResourceManager::close();
     return 0;
 }

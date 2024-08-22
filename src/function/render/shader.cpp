@@ -1,4 +1,7 @@
 #include "star/function/render/shader.hpp"
+#include "star/def.hpp"
+#include "star/function/filesystem/path.hpp"
+#include "star/resource/resource_manager.hpp"
 
 namespace star {
 Shader::Shader(star::StringView vertex, star::StringView fragment) {
@@ -59,7 +62,30 @@ GLint Shader::getUniformLocation(const String &name) {
         Log::error("Uniform variable not found: {}", name);
         return location;
     }
+    _mutex.lock();
     _uniformCache[name] = location;
+    _mutex.unlock();
     return location;
+}
+
+bool Shader::checkNode(const YAML::Node &node, const String &obj) {
+    STAR_CHECK_NODE(node, obj, "name")
+    STAR_CHECK_NODE(node, obj, "vertex")
+    STAR_CHECK_NODE(node, obj, "fragment")
+    return true;
+}
+
+Shader *Shader::createFromFile(StringView path) {
+    auto node = YAML::LoadFile(Path::pathConvert(path));
+    return createFromNode(node);
+}
+
+Shader *Shader::createFromNode(const YAML::Node &node) {
+    if (!checkNode(node)) {
+        return nullptr;
+    }
+    return ResourceManager::emplaceLoadStaticResource<Shader>(
+        node["name"].as<String>(), node["vertex"].as<String>(),
+        node["fragment"].as<String>());
 }
 } // namespace star

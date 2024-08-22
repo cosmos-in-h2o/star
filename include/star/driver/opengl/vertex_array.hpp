@@ -4,6 +4,7 @@
 #include "star/driver/opengl/gl_common.hpp"
 #include "star/driver/opengl/index_buffer.hpp"
 #include "star/driver/opengl/vertex_buffer.hpp"
+#include "vertex_layout.hpp"
 
 namespace star {
 class VertexArray {
@@ -11,13 +12,11 @@ class VertexArray {
     VertexArray();
     ~VertexArray();
 
-    void bind() const { glBindVertexArray(_arrayID); }
+    void bind() const {  glBindVertexArray(_arrayID);}
     void unbind() const { glBindVertexArray(0); }
 
     // 添加顶点缓冲到VAO，并配置顶点属性指针
-    void addVertexBuffer(const VertexBuffer &vb, GLuint index, GLint size,
-                         GLenum type, GLboolean normalized, GLsizei stride,
-                         const void *offset) const;
+    void addVertexBuffer(const VertexBuffer &vb, VertexLayout layout) const;
 
     // 绑定索引缓冲
     void setIndexBuffer(const IndexBuffer &ib) const;

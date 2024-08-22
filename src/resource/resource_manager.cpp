@@ -29,21 +29,17 @@ void ResourceManager::init() {
 
 void ResourceManager::close() {
     for (auto &i : _staticResourceData) {
-        if (i.second) {
-            delete i.second;
-            i.second = nullptr;
-        }
+        delete i.second;
+        i.second = nullptr;
     }
 
     for (auto &i : _resourceData) {
-        if (i.second.resource) {
-            delete i.second.resource;
-            i.second.resource = nullptr;
-        }
+        delete i.second.resource;
+        i.second.resource = nullptr;
     }
 }
 
-void ResourceManager::collectGarbage() {
+void ResourceManager::garbageCollect() {
     for (const auto &i : _collectList) {
         auto it = _resourceData.find(i);
         if (it != _resourceData.end() && isCollect(it->second)) {
@@ -51,6 +47,16 @@ void ResourceManager::collectGarbage() {
             it->second.resource = nullptr;
             _resourceData.erase(it);
         }
+    }
+}
+
+void ResourceManager::staticCollect(const String &name) {
+    std::lock_guard<std::mutex> lockGuard(_mutex2);
+    auto it = _staticResourceData.find(name);
+    if (it != _staticResourceData.end()) {
+        delete it->second;
+        it->second = nullptr;
+        _staticResourceData.erase(it);
     }
 }
 

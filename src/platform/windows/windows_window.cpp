@@ -1,9 +1,10 @@
 #include "star/platform/windows/windows_window.hpp"
 #include "star/core/event/event_dispatcher.hpp"
+#include "star/core/io/log.hpp"
 #include <GLFW/glfw3.h>
 
 namespace star {
-WindowsWindow::WindowsWindow(StringView title, int32 width, int32 height)
+WindowsWindow::WindowsWindow(StringView title, int32_t width, int32_t height)
     : _title(title), _width(width), _height(height) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -14,6 +15,7 @@ WindowsWindow::WindowsWindow(StringView title, int32 width, int32 height)
 #endif
     this->_window = glfwCreateWindow(this->_width, this->_height,
                                      this->_title.c_str(), nullptr, nullptr);
+    registerCallback();
 }
 
 WindowsWindow::~WindowsWindow() {
@@ -21,9 +23,7 @@ WindowsWindow::~WindowsWindow() {
     glfwTerminate();
 }
 
-void WindowsWindow::clear() {
-    glClear(GL_COLOR_BUFFER_BIT);
-}
+void WindowsWindow::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
 void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
     glfwSetWindowUserPointer(this->_window, &dispatcher);
@@ -43,17 +43,14 @@ void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
             break;
         }
         case GLFW_REPEAT: {
-            KeyPressedEvent event(glfwKeyConvert(key), true);
+            KeyTypedEvent event(glfwKeyConvert(key));
+            dispatcher->dispatchEvent(EventType::KEY_TYPED, event);
             break;
         }
         default:
             break;
         }
     });
-    glfwSetFramebufferSizeCallback(
-        (GLFWwindow *)_window, [](GLFWwindow *window, int width, int height) {
-            glViewport(0, 0, width, height);
-        });
 
     // glfw event
     /*
@@ -155,5 +152,12 @@ void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
     // width: 新的帧缓冲宽度
     // height: 新的帧缓冲高度
      */
+}
+
+void WindowsWindow::registerCallback() {
+    glfwSetFramebufferSizeCallback(
+        (GLFWwindow *)_window, [](GLFWwindow *window, int width, int height) {
+          glViewport(0, 0, width, height);
+        });
 }
 } // namespace star

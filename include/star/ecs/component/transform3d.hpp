@@ -5,7 +5,7 @@
 #include "star/core/math/linear.hpp"
 
 namespace star {
-struct Transform3D:Component{
+struct Transform3D:public Component{
     vec3 position{};
     vec3 rotation{};
     vec3 scale{};

@@ -1,6 +1,8 @@
 #ifndef STAR_EVENT_HPP
 #define STAR_EVENT_HPP
 
+#include "star/core/io/log.hpp"
+#include <cassert>
 #include <functional>
 #include <star/def.hpp>
 
@@ -8,7 +10,7 @@
     using type##Cb = std::function<void(const type &)>;
 
 namespace star {
-enum EventType : uint64 {
+enum EventType : uint64_t {
     UNKNOWN = 0,
     // window event
     WINDOW_CLOSE = 0xff,
@@ -28,7 +30,8 @@ enum EventType : uint64 {
     MOUSE_SCROLLED,
 
     // engine event
-    START_EVENT = 0xffff,
+    AWAKE_EVENT = 0xffff,
+    START_EVENT,
     UPDATE_EVENT,
     DESTROY_EVENT,
 
@@ -298,12 +301,21 @@ class Event {
   public:
     Event();
     virtual ~Event();
-    virtual EventType getType();
+    virtual EventType getType() const;
 };
 
 extern const Event emptyEvent;
 
 REGISTER_CALLBACK_FN(Event)
+
+template <class T> T *EventConvert(const Event &event) {
+    T t;
+    if (t.getType() != event.getType()) {
+        Log::error("Event convert error");
+        return nullptr;
+    }
+    return (T *)(&event);
+}
 } // namespace star
 
 #endif // STAR_EVENT_HPP

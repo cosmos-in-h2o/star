@@ -52,7 +52,7 @@ int main() {
     ResourceManager::loadStaticResource<Res2>("res3", res3);
     ResourceManager::loadStaticResource<Res2>("res4", res4);
 
-    ResourceManager::collectGarbage();
+    ResourceManager::garbageCollect();
 
     return 0;
 }
