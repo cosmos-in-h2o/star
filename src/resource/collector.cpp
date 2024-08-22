@@ -1,15 +1,14 @@
 #include "star/resource/collector.hpp"
+#include "star/resource/resource_manager.hpp"
 
 namespace star {
-std::array<Garbage, 512> Collector::_collectList{};
-SafeNumeric<size_t> Collector::_pos{0};
+AtomicArray<Garbage, 512> Collector::_collectList{};
 
 void Collector::garbageCollect() {
-    for (int i = 0; i < _pos.get(); i++) {
+    for (int i = 0; i < _collectList.get_pos(); i++) {
         _collectList[i].func(_collectList[i].ptr);
     }
-    _pos.set(0);
+    _collectList.clear();
+    ResourceManager::garbageCollect();
 }
-
-void Collector::close() { garbageCollect(); }
 } // namespace star

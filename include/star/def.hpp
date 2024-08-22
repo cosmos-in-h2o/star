@@ -28,4 +28,6 @@ constexpr uint64_t uint64_max = (std::numeric_limits<uint64_t>::max)();
         ::star::Log::error("{} missing {} attribute", obj, attribute);         \
         return false;                                                          \
     }
+
+template <class RT, class... Ts> using FuncPtr = RT (*)(Ts...);
 #endif

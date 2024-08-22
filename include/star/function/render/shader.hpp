@@ -51,8 +51,7 @@ class Shader : public Resource {
 
   private:
     GLuint _programID;
-    HashMap<String, GLint> _uniformCache;
-    std::mutex _mutex{};
+    SafeHashMap<String, GLint> _uniformCache;
 
     static GLuint compileShader(GLenum type, const char *source);
     GLint getUniformLocation(const String &name);

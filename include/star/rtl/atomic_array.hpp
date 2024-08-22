@@ -15,7 +15,8 @@ template <class T, size_t s> class AtomicArray {
     size_t size();
     bool empty();
     void reset(size_t pos = 0);
-    T&at(size_t index);
+    void clear();
+    T &at(size_t index);
 
     T &operator[](size_t index);
     std::array<T, s>::iterator begin();
@@ -51,11 +52,15 @@ template <class T, size_t s> size_t AtomicArray<T, s>::size() {
 }
 
 template <class T, size_t s> bool AtomicArray<T, s>::empty() {
-    return _array.empty();
+    return _pos.get() == 0;
 }
 
 template <class T, size_t s> void AtomicArray<T, s>::reset(size_t pos) {
     _pos.set(pos);
+}
+
+template <class T, size_t s> void AtomicArray<T, s>::clear() {
+    reset(0);
 }
 
 template <class T, size_t s> T &AtomicArray<T, s>::at(size_t index) {

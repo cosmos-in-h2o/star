@@ -2,6 +2,8 @@
 #define STAR_RESOURCE_MANAGER_HPP
 
 #include "star/core/io/log.hpp"
+#include "star/def.hpp"
+#include "star/resource/collector.hpp"
 #include "star/resource/resource_info.hpp"
 #include "star/rtl/hash_map.hpp"
 #include "star/rtl/list.hpp"
@@ -11,13 +13,9 @@
 #include <mutex>
 
 namespace star {
-typedef void (*RemoveResourceFunc)(List<String> &list,
-                                   HashMap<String, ResourceInfo> &resources,
-                                   StringView name);
+using RemoveResourceFunc = FuncPtr<void, SafeList<String> &, StringView>;
 
-void defaultRemoveFunc(List<String> &list,
-                       HashMap<String, ResourceInfo> &resources,
-                       StringView name);
+void defaultRemoveFunc(SafeList<String> &list, StringView name);
 
 template <class T> class Ref {
   public:
@@ -45,50 +43,113 @@ template <class T> class Ref {
 
 class ResourceManager {
     template <class RT> friend class Ref;
+    friend class Collector;
 
   public:
-    // 将资源交由管理器管理，若重名则覆盖原来的资源
+    /**
+     * @brief 将普通资源交由管理器管理,资源不存在则添加,存在则覆盖
+     * @param name 要加载的资源的名字
+     * @param resource
+    要加载进的资源的指针，若资源存在且此指针若为空则删除资源,指针不为空则删除原资源，把该指针加载进原资源位置
+     * @return 返回加载的资源的Ref<T>
+     */
     template <class RT>
     static Ref<RT> loadResource(const String &name, Resource *resource);
+    /**
+     * @brief 将普通资源交由管理器管理,资源不存在则创建并添加,存在则不做处理
+     * @param name 要加载的资源的名字
+     * @param args
+    要加载进的资源的构造函数参数,但实际是否会构造指定对象由函数内部确定
+     * @return 返回需要的资源的Ref<T>
+     * @see Ref<T>
+     */
     template <class RT>
     static Ref<RT> emplaceLoadResource(const String &name, auto &&...args);
-    // 将静态资源交由管理器，若重名则报错
+    /**
+     * @brief 将静态资源交由管理器，若重名则返回原有资源.
+     * @attention 第二个参数直接传入new
+     * ResourceT()有可能造成内存泄露,因为如果重名不会对传入的指针做任何操作,整个加载语句就等价于getStaticResource(name)+new
+     * ResourceT(),可以使用emplaceLoadStaticResource()函数,或者在加载前先进行判断,再施行合理对策.
+     * @param name 要加载的资源的名字
+     * @param resource 要加载进的资源的指针
+     * @return 返回需要的资源指针
+     */
     template <class RT>
     static RT *loadStaticResource(const String &name, Resource *resource);
+    /**
+     * @brief 将静态资源交由管理器，若重名则返回原有资源
+     * @param name 要加载的资源的名字
+     * @param args
+     * 要加载进的资源的构造函数参数,但实际是否会构造指定对象由函数内部确定
+     * @return 返回需要的资源指针
+     */
     template <class RT>
     static RT *emplaceLoadStaticResource(const String &name, auto &&...args);
 
-    // 将资源交由管理器管理，若重名则直接获取原来的资源
-    template <class RT>
-    static Ref<RT> loadResourceWithoutUpdate(const String &name,
-                                             Resource *resource);
-    template <class RT>
-    static Ref<RT> emplaceLoadResourceWithoutUpdate(const String &name,
-                                                    auto &&...args);
-
+    /**
+     * @brief 获取普通资源
+     * @param name 要获取的资源的名字
+     * @return 返回获取的资源的Ref<T>
+     * @see Ref<T>
+     */
     template <class RT> static Ref<RT> getResource(const String &name);
+    /**
+     * @brief 获取静态资源
+     * @param name 要获取的资源的名字
+     * @return 返回获取的资源指针
+     */
     template <class RT> static RT *getStaticResource(const String &name);
 
+    /**
+     * @brief 是否拥有某普通资源
+     * @param name 资源的名字
+     * @return 有为true,无为false
+     */
+    static bool hasResource(const String &name);
+    /**
+     * @brief 是否拥有某静态资源
+     * @param name 资源的名字
+     * @return 有为true,无为false
+     */
+    static bool hasStaticResource(const String &name);
+
+    /**
+     * @brief 移除某普通资源
+     * @param name 资源的名字
+     */
     static void removeResource(const String &name);
+    /**
+     * @brief 移除某静态资源
+     * @details 立即从ResourceManager中移除某静态资源,并将资源指针交给外部回收器
+     * @warning
+     * 静态资源理应在游戏结束时自动被回收,并且由于静态资源都是通过普通的指针获取的,很有可能造成悬垂指针,因此若无特殊需求不建议使用.
+     * @prama name 资源名称
+     */
+    static void removeStaticResource(const String &name);
 
+    /**
+     * @brief 初始化资源管理器
+     */
     static void init();
+    /**
+     * @brief 关闭资源管理器
+     */
     static void close();
-
-    static void garbageCollect();
-    static void staticCollect(const String &name);
 
     static RemoveResourceFunc removeResourceFunc;
 
   private:
+    /*
+     * 实行GC,回收所有存在于_resourceData且被标记为可回收的资源
+     * 此函数由外部回收器调用,游戏中不需要显示调用此函数
+     */
+    static void garbageCollect();
     static bool isCollect(ResourceInfo &info);
 
-    static HashMap<String, ResourceInfo> _resourceData;
-    static HashMap<String, Resource *> _staticResourceData;
+    static SafeHashMap<String, ResourceInfo> _resourceData;
+    static SafeHashMap<String, Resource *> _staticResourceData;
 
-    static List<String> _collectList;
-
-    static std::mutex _mutex;
-    static std::mutex _mutex2;
+    static SafeList<String> _collectList;
 };
 
 template <class T> Ref<T>::Ref() = default;
@@ -120,7 +181,6 @@ template <class T> Ref<T>::~Ref() {
     if (_resource && ResourceManager::removeResourceFunc && !_name.empty() &&
         _refCount->decrement() == 0) {
         ResourceManager::removeResourceFunc(ResourceManager::_collectList,
-                                            ResourceManager::_resourceData,
                                             _name);
     }
     _resource = nullptr;
@@ -136,7 +196,6 @@ template <class T> void Ref<T>::unref() {
     if (_resource && ResourceManager::removeResourceFunc && !_name.empty() &&
         _refCount->decrement() == 0) {
         ResourceManager::removeResourceFunc(ResourceManager::_collectList,
-                                            ResourceManager::_resourceData,
                                             _name);
     }
     _resource = nullptr;
@@ -187,7 +246,6 @@ template <class T> Ref<T>::operator bool() const noexcept {
 
 template <class RT>
 Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
-    std::unique_lock<std::mutex> uniqueLock(_mutex);
     auto it = _resourceData.find(name);
     // 没找到就添加
     if (it == _resourceData.end()) {
@@ -202,7 +260,8 @@ Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
         auto pair = _resourceData.find(name);
         return Ref<RT>(pair->second, pair->first);
     }
-    // 找到了更新
+    // 找到了
+    // 先判断是否是需要把原有资源删除的情形
     // 当要加载的资源就是现在所持有的资源时
     if (resource == it->second.resource) {
         it->second.refCount.increment();
@@ -211,12 +270,14 @@ Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
     // 若传入空指针则代表需要删除这个资源
     else if (resource == nullptr) {
         Log::warn("In {}: resource is a nullptr.", __FUNCTION__);
-        removeResourceFunc(_collectList, _resourceData, name);
+        removeResourceFunc(_collectList, name);
         return Ref<RT>();
     }
-    // 压入一个回收内容
-    removeResourceFunc(_collectList, _resourceData, it->first);
+    // 需要删除资源
+    // 此时不能使用内部的回收器,因为资源已经不存在于内部了,应该把指针提交给外部回收器帮助正常回收
+    Collector::push(it->second.resource, collectResource);
     it->second.resource = resource;
+    // 被作为一个新资源加载所以要增加1,防止之前的资源的引用计数还未清除
     it->second.refCount.increment();
 
     return Ref<RT>(it->second, it->first);
@@ -225,6 +286,9 @@ Ref<RT> ResourceManager::loadResource(const String &name, Resource *resource) {
 template <class RT>
 Ref<RT> ResourceManager::emplaceLoadResource(const String &name,
                                              auto &&...args) {
+    if (hasResource(name)) {
+        return getResource<RT>(name);
+    }
     Resource *res = new RT(std::forward<decltype(args)>(args)...);
     return loadResource<RT>(name, res);
 }
@@ -232,64 +296,30 @@ Ref<RT> ResourceManager::emplaceLoadResource(const String &name,
 template <class RT>
 RT *ResourceManager::loadStaticResource(const String &name,
                                         Resource *resource) {
-    std::unique_lock<std::mutex> uniqueLock(_mutex2);
     auto it = _staticResourceData.find(name);
     // 没找到就添加
     if (it == _staticResourceData.end()) {
         _staticResourceData[name] = resource;
         return static_cast<RT *>(resource);
     }
-    // 找到了更新
+    // 找到了
     // 当要加载的资源就是现在所持有的资源时
     if (resource == it->second) {
         return static_cast<RT *>(resource);
-    } else {
-        Log::error("Static Resource: {} already exists.", name);
     }
-    return nullptr;
+    // 发生重名,先警告再返回原有资源
+    Log::warn("Static Resource: {} already exists.", name);
+    return static_cast<RT *>(it->second);
 }
 
 template <class RT>
 RT *ResourceManager::emplaceLoadStaticResource(const String &name,
                                                auto &&...args) {
+    if (hasStaticResource(name)) {
+        return getStaticResource<RT>(name);
+    }
     Resource *res = new RT(std::forward<decltype(args)>(args)...);
     return loadStaticResource<RT>(name, res);
-}
-
-template <class RT>
-Ref<RT> ResourceManager::loadResourceWithoutUpdate(const String &name,
-                                                   Resource *resource) {
-    std::unique_lock<std::mutex> uniqueLock(_mutex);
-    auto it = _resourceData.find(name);
-    // 没找到就添加
-    if (it == _resourceData.end()) {
-        if (resource == nullptr) {
-            Log::warn("In {}: resource is a nullptr.", __FUNCTION__);
-            return Ref<RT>(ResourceInfo{}, StringView{});
-        }
-        ResourceInfo info(resource);
-        info.refCount.increment();
-        _resourceData[name] = info;
-        auto pair = _resourceData.find(name);
-        return Ref<RT>(pair->second, pair->first);
-    }
-    // 找到了就直接获取
-    // 若传入空指针则代表需要删除这个资源
-    if (resource == nullptr) {
-        Log::warn("In {}: resource is a nullptr.", __FUNCTION__);
-        removeResourceFunc(_collectList, _resourceData, name);
-        return Ref<RT>();
-    }
-    it->second.refCount.increment();
-    return Ref<RT>(it->second, it->first);
-}
-
-template <class RT>
-Ref<RT> ResourceManager::emplaceLoadResourceWithoutUpdate(const String &name,
-                                                          auto &&...args) {
-
-    Resource *res = new RT(std::forward<decltype(args)>(args)...);
-    return loadResourceWithoutUpdate<RT>(name, res);
 }
 
 template <class RT> Ref<RT> ResourceManager::getResource(const String &name) {
@@ -304,7 +334,7 @@ template <class RT> Ref<RT> ResourceManager::getResource(const String &name) {
 template <class RT> RT *ResourceManager::getStaticResource(const String &name) {
     auto it = _staticResourceData.find(name);
     if (it != _staticResourceData.end()) {
-        return it->second;
+        return static_cast<RT *>(it->second);
     }
     return nullptr;
 }

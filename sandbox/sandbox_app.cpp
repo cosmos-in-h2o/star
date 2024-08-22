@@ -1,17 +1,4 @@
-#include "star/driver/opengl/gl_common.hpp"
-// order
-#include "star/core/io/log.hpp"
-#include "star/driver/opengl/opengl_context.hpp"
-#include "star/driver/opengl/vertex_layout.hpp"
-#include "star/ecs/component/camera2d.hpp"
-#include "star/ecs/component/sprite.hpp"
-#include "star/function/filesystem/path.hpp"
-#include "star/function/render/material2d.hpp"
-#include "star/platform/windows/windows_window.hpp"
-#include "star/rtl/map.hpp"
-#include "star/tool/imgui/imgui.hpp"
-#include <fstream>
-#include <yaml-cpp/yaml.h>
+#include "star/star.hpp"
 
 int main(int argc, char **argv) {
     star::Log::init("Logger");

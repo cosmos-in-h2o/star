@@ -24,7 +24,7 @@ Shader::Shader(star::StringView vertex, star::StringView fragment) {
     glGetProgramiv(_programID, GL_LINK_STATUS, &success);
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(_programID, 512, NULL, infoLog);
+        glGetProgramInfoLog(_programID, 512, nullptr, infoLog);
         Log::error("Shader program linking failed: ", infoLog);
     }
     // 删除着色器对象，程序链接后不再需要
@@ -62,9 +62,7 @@ GLint Shader::getUniformLocation(const String &name) {
         Log::error("Uniform variable not found: {}", name);
         return location;
     }
-    _mutex.lock();
     _uniformCache[name] = location;
-    _mutex.unlock();
     return location;
 }
 
