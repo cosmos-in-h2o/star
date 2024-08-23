@@ -2,6 +2,8 @@
 #include "star/resource/resource_manager.hpp"
 
 namespace star {
+void collectResource(void *ptr) { delete (Resource *)ptr; }
+
 AtomicArray<Garbage, 512> Collector::_collectList{};
 
 void Collector::garbageCollect() {
@@ -11,4 +13,6 @@ void Collector::garbageCollect() {
     _collectList.clear();
     ResourceManager::garbageCollect();
 }
+
+void Collector::close() { garbageCollect(); }
 } // namespace star

@@ -9,7 +9,7 @@
 namespace star {
 using CollectFunc = FuncPtr<void, void *>;
 
-void collectResource(void *ptr) { delete (Resource *)ptr; }
+void collectResource(void *ptr) ;
 
 struct Garbage {
     void *ptr;
@@ -29,7 +29,6 @@ class Collector {
     static AtomicArray<Garbage, 512> _collectList;
 };
 
-void Collector::close() { garbageCollect(); }
 template <class T> void Collector::push(T *ptr, CollectFunc func) {
     _collectList.push({ptr, func});
 }

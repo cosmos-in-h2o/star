@@ -29,7 +29,6 @@ String Loader::loadString(star::StringView path) {
 Texture2D *Loader::loadTexture2D(StringView path) {
     String absolutePath = Path::pathConvert(path);
     auto texture = new Texture2D;
-    stbi_set_flip_vertically_on_load(1);
     texture->data = stbi_load(absolutePath.c_str(), &texture->width,
                               &texture->height, &texture->channels, 0);
     if (texture->data) {

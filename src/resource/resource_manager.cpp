@@ -1,7 +1,8 @@
 #include "star/resource/resource_manager.hpp"
 
 namespace star {
-void defaultRemoveFunc(List<String> &list, StringView name) {
+void defaultRemoveFunc(SafeList<String> &list,
+                       StringView name) {
     list.emplace_back(name);
 }
 

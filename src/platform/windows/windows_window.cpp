@@ -1,11 +1,22 @@
 #include "star/platform/windows/windows_window.hpp"
 #include "star/core/event/event_dispatcher.hpp"
-#include "star/core/io/log.hpp"
 #include <GLFW/glfw3.h>
 
 namespace star {
-WindowsWindow::WindowsWindow(StringView title, int32_t width, int32_t height)
-    : _title(title), _width(width), _height(height) {
+static void framebufferResizeCallBack(GLFWwindow *window, int width,
+                                      int height) {
+    auto dataPtr = static_cast<WindowsWindow::WindowData *>(
+        glfwGetWindowUserPointer(window));
+    int32_t *posArr = dataPtr->pos;
+    posArr[0] = width;
+    posArr[1] = height;
+    auto viewPort = dataPtr->window->getCamera()->getViewport({width, height});
+    glViewport(viewPort.x, viewPort.y, viewPort.z, viewPort.w);
+}
+
+WindowsWindow::WindowsWindow(StringView title, int32_t width, int32_t height,
+                             Camera *camera)
+    : _title(title), _width(width), _height(height), _camera(camera) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -15,7 +26,7 @@ WindowsWindow::WindowsWindow(StringView title, int32_t width, int32_t height)
 #endif
     this->_window = glfwCreateWindow(this->_width, this->_height,
                                      this->_title.c_str(), nullptr, nullptr);
-    registerCallback();
+    glfwSetWindowUserPointer(this->_window, &data);
 }
 
 WindowsWindow::~WindowsWindow() {
@@ -26,32 +37,36 @@ WindowsWindow::~WindowsWindow() {
 void WindowsWindow::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
 void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
-    glfwSetWindowUserPointer(this->_window, &dispatcher);
-    glfwSetKeyCallback((GLFWwindow *)this->_window, [](GLFWwindow *window,
-                                                       int key, int scancode,
-                                                       int action, int mods) {
-        auto dispatcher =
-            static_cast<EventDispatcher *>(glfwGetWindowUserPointer(window));
-        switch (action) {
-        case GLFW_PRESS: {
-            KeyPressedEvent event(glfwKeyConvert(key), false);
-            dispatcher->dispatchEvent(EventType::KEY_PRESSED, event);
-            break;
-        }
-        case GLFW_RELEASE: {
-            KeyReleasedEvent event(glfwKeyConvert(key));
-            break;
-        }
-        case GLFW_REPEAT: {
-            KeyTypedEvent event(glfwKeyConvert(key));
-            dispatcher->dispatchEvent(EventType::KEY_TYPED, event);
-            break;
-        }
-        default:
-            break;
-        }
-    });
-
+    data.dispatcher = &dispatcher;
+    glfwSetKeyCallback(
+        (GLFWwindow *)this->_window,
+        [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+            auto dispatcher =
+                static_cast<WindowData *>(glfwGetWindowUserPointer(window))
+                    ->dispatcher;
+            switch (action) {
+            case GLFW_PRESS: {
+                KeyPressedEvent event(glfwKeyConvert(key), false);
+                dispatcher->dispatchEvent(EventType::KEY_PRESSED, event);
+                break;
+            }
+            case GLFW_RELEASE: {
+                KeyReleasedEvent event(glfwKeyConvert(key));
+                break;
+            }
+            case GLFW_REPEAT: {
+                KeyTypedEvent event(glfwKeyConvert(key));
+                dispatcher->dispatchEvent(EventType::KEY_TYPED, event);
+                break;
+            }
+            default:
+                break;
+            }
+        });
+    data.pos = _pos;
+    data.window = this;
+    glfwSetFramebufferSizeCallback((GLFWwindow *)_window,
+                                   framebufferResizeCallBack);
     // glfw event
     /*
     1. 窗口大小改变事件(Window Resize)
@@ -154,10 +169,7 @@ void WindowsWindow::registerDispatch(EventDispatcher &dispatcher) {
      */
 }
 
-void WindowsWindow::registerCallback() {
-    glfwSetFramebufferSizeCallback(
-        (GLFWwindow *)_window, [](GLFWwindow *window, int width, int height) {
-          glViewport(0, 0, width, height);
-        });
-}
+Camera *WindowsWindow::getCamera() { return _camera; }
+
+void WindowsWindow::setCamera(Camera *camera) { _camera = camera; }
 } // namespace star

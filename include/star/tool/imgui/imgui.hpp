@@ -1,9 +1,12 @@
 #ifndef STAR_IMGUI_HPP
 #define STAR_IMGUI_HPP
 
-#include "star/core/event/event.hpp"
+#include "star/driver/opengl/gl_common.hpp"
+// order
 #include "star/core/ecs/scene.hpp"
+#include "star/core/event/event.hpp"
 #include "star/core/window.hpp"
+#include "star/driver/opengl/framebuffer.hpp"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -19,8 +22,8 @@ class ImGUI {
     static void end();
 
   private:
-
-    static GLFWwindow *_window;
+    static void menuBar();
+    static Window *_window;
 };
 } // namespace star
 

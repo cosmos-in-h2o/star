@@ -2,17 +2,37 @@
 
 namespace star {
 mat4 &Camera2D::getViewProjectionMat() {
-    auto viewMatrix = translate(mat4(1.0f), {-transform->position, 0.0});
-
-    viewMatrix =
-        rotate(viewMatrix, radians(-transform->rotation), vec3(0.0, 0.0, 1.0));
-
-    auto projectionMatrix = ortho(transform->position.x - viewPort.x / 2,
-                                  transform->position.x + viewPort.x / 2,
-                                  transform->position.y + viewPort.y / 2,
-                                  transform->position.y - viewPort.y / 2);
+    auto viewMatrix =
+        rotate(mat4(1.0f), radians(-transform->rotation), vec3(0.0, 0.0, 1.0));
+    viewMatrix = translate(viewMatrix, {-transform->position, 0.0});
+    auto projectionMatrix = ortho(-viewport.x / 2, viewport.x / 2,
+                                  -viewport.y / 2, viewport.y / 2, -1.0f, 1.0f);
 
     _viewingMatrix = projectionMatrix * viewMatrix;
     return _viewingMatrix;
+}
+
+ivec4 Camera2D::getViewport(ivec2 size) {
+    // 计算窗口的长宽比
+    float targetAspect = viewport.x / viewport.y;
+    float aspect = static_cast<float>(size.x) / static_cast<float>(size.y);
+
+    int viewportWidth, viewportHeight;
+    int xOffset = 0, yOffset = 0;
+
+    if (aspect > targetAspect) {
+        // 窗口宽度过大
+        viewportHeight = size.y;
+        viewportWidth =
+            static_cast<int>(static_cast<float>(viewportHeight) * targetAspect);
+        xOffset = (size.x - viewportWidth) / 2;
+    } else {
+        // 窗口高度过大
+        viewportWidth = size.x;
+        viewportHeight =
+            static_cast<int>(static_cast<float>(viewportWidth) / targetAspect);
+        yOffset = (size.y - viewportHeight) / 2;
+    }
+    return {xOffset, yOffset, viewportWidth, viewportHeight};
 }
 } // namespace star
