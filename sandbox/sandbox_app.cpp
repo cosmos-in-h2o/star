@@ -1,5 +1,9 @@
 #include "star/star.hpp"
 
+class Sandbox : public star::Application {
+  public:
+};
+
 int main(int argc, char **argv) {
     star::Log::init("Logger");
 

@@ -1,5 +1,5 @@
-#ifndef STAR_GAME_HPP
-#define STAR_GAME_HPP
+#ifndef STAR_GAME_SPACE_HPP
+#define STAR_GAME_SPACE_HPP
 
 #include "star/driver/opengl/framebuffer.hpp"
 #include "star/tool/imgui/imgui.hpp"
