@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
     data.addEntity("light", entity2);
 
     auto data1 = SceneData::loadFromFile("scene1.scene");
+    uint32_t a = 0;
 
     ivec4 viewport;
     vec2 framebufferSize = framebuffer.getSize();
@@ -90,17 +91,20 @@ int main(int argc, char **argv) {
 
         ImGui::SliderFloat2(
             "Position", star::value_ptr(cameraTransform.position), -1024, 1024);
-        ImGui::SliderFloat("Rotation", &cameraTransform.rotation, -360, 360);
-        ImGui::SliderFloat2("Scale", star::value_ptr(transform.scale), -32, 32);
+        ImGui::SliderFloat("旋转角", &cameraTransform.rotation, -360, 360);
+        ImGui::DragFloat2("Scale", star::value_ptr(transform.scale), 0.01f);
         ImGui::ColorEdit4("color", star::value_ptr(sprite.color));
-
+        ImGui::DragScalar("int32_t", ImGuiDataType_U32, &a, 1.0f,
+                          &star::uint32_min, &star::uint32_max, "%u");
+        static char single_char[2] = "";
+        ImGui::InputText("Single Character", single_char, sizeof(single_char));
         ImGui::End();
 
         ImGUI::end();
     }
-    auto p=&star::Transform2D::position;
+    auto p = &star::Transform2D::position;
     Transform2D t;
-    t.*p={2,3};
+    t.*p = {2, 3};
     ImGUI::close();
     return 0;
 }

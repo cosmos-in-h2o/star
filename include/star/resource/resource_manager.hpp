@@ -211,8 +211,8 @@ template <class T> Ref<T> &Ref<T>::operator=(const Ref<T> &ref) {
         _refCount->decrement();
     }
     this->_resource = ref._resource;
+    this->_name = ref._name;
     this->_refCount = ref._refCount;
-    this->name = ref.name;
     if (_refCount) {
         _refCount->increment();
     }
@@ -326,7 +326,7 @@ template <class RT> Ref<RT> ResourceManager::getResource(const String &name) {
     auto it = _resourceData.find(name);
     if (it != _resourceData.end()) {
         it->second.refCount.increment();
-        return Ref<RT>(&(it->second), name);
+        return Ref<RT>(it->second, name);
     }
     return Ref<RT>();
 }

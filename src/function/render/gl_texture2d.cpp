@@ -58,21 +58,21 @@ bool GLTexture2D::checkNode(const YAML::Node &node, const String &obj) {
     return true;
 }
 
-GLTexture2D *GLTexture2D::createFromFile(StringView path) {
+Ref<GLTexture2D> GLTexture2D::createFromFile(StringView path) {
     auto node = YAML::LoadFile(Path::pathConvert(path));
     return createFromNode(node);
 }
 
-GLTexture2D *GLTexture2D::createFromNode(const YAML::Node &node) {
+Ref<GLTexture2D> GLTexture2D::createFromNode(const YAML::Node &node) {
     if (!checkNode(node)) {
-        return nullptr;
+        return {};
     }
     auto &textureNode = node["texture"];
     auto texture = ResourceManager::loadResource<Texture2D>(
-        textureNode["name"].as<String>(),
+        textureNode["path"].as<String>(),
         Loader::loadTexture2D(textureNode["path"].as<String>()));
 
-    return ResourceManager::emplaceLoadStaticResource<GLTexture2D>(
+    return ResourceManager::emplaceLoadResource<GLTexture2D>(
         node["name"].as<String>(), texture.operator*(),
         node["linear"].as<bool>(), node["mipmap"].as<bool>());
 }

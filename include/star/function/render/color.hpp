@@ -5,6 +5,8 @@
 
 namespace star{
 using Color=vec4;
+
+void starBindFunc_Color();
 }
 
 #endif // STAR_COLOR_HPP

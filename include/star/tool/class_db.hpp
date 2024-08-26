@@ -15,14 +15,29 @@ using StructSerializeFunc = FuncPtr<void, void *, YAML::Node &>;
 using StructDeserializeFunc = FuncPtr<void, void *, const YAML::Node &>;
 using StructEditorUIFunc = FuncPtr<void, const char *, void *>;
 
+template <class T> struct FuncGroup {
+    FuncGroup() { _funcList.reserve(32); }
+    void pushBack(T &&func) { _funcList.push_back(std::forward<T>(func)); }
+    void operator()(auto &&...args) {
+        for (auto item : _funcList) {
+            item(std::forward<decltype(args)>(args)...);
+        }
+    }
+
+  private:
+    List<T> _funcList{};
+};
+
 class ClassDB {
   public:
-    static HashMap<String, ComponentSerializeFunc> componentSerialize;
-    static HashMap<String, ComponentDeserializeFunc> componentDeserialize;
-    static HashMap<String, ComponentEditorUIFunc> componentEditorUI;
-    static HashMap<String, StructSerializeFunc> structSerialize;
-    static HashMap<String, StructDeserializeFunc> structDeserialize;
-    static HashMap<String, StructEditorUIFunc> structEditorUI;
+    static HashMap<String, FuncGroup<ComponentSerializeFunc>>
+        componentSerialize;
+    static HashMap<String, FuncGroup<ComponentDeserializeFunc>>
+        componentDeserialize;
+    static HashMap<String, FuncGroup<ComponentEditorUIFunc>> componentEditorUI;
+    static HashMap<String, FuncGroup<StructSerializeFunc>> structSerialize;
+    static HashMap<String, FuncGroup<StructDeserializeFunc>> structDeserialize;
+    static HashMap<String, FuncGroup<StructEditorUIFunc>> structEditorUI;
 };
 } // namespace star
 

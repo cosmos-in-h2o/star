@@ -11,7 +11,9 @@ mat4 &Transform2D::getModelMatrix() {
 }
 
 void Transform2D::starBindFunc() {
-    STAR_AUTO_CLASS_DB_COMPONENT_3(star::Transform2D, star::vec2, position,
-                                   star::vec2, scale, float, rotation)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Transform2D, star::vec2,
+                                          position)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Transform2D, star::vec2, scale)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Transform2D, float, rotation)
 }
 } // namespace star

@@ -13,13 +13,11 @@ star引擎中有以下几种基础类型，它们会被最基础的代码绑定�
 - uint64_t
 - float
 - double
-- char8_t
+- char8
 - star::vec2
 - star::vec3
 - star::vec4
-- star::mat4
 - star::String
-- star::U8String
 - star::List\<E>(暂未绑定)
 - star::SafeList\<E>(暂未绑定)
 

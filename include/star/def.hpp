@@ -22,6 +22,7 @@ constexpr uint32_t uint32_max = (std::numeric_limits<uint32_t>::max)();
 constexpr uint64_t uint64_min = (std::numeric_limits<uint64_t>::min)();
 constexpr uint64_t uint64_max = (std::numeric_limits<uint64_t>::max)();
 } // namespace star
+using char8 = char;
 
 #define STAR_CHECK_NODE(node, obj, attribute)                                  \
     if (!node[attribute]) {                                                    \

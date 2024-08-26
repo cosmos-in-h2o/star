@@ -9,6 +9,7 @@ struct Transform3D:public Component{
     vec3 position{};
     vec3 rotation{};
     vec3 scale{};
+    static void starBindFunc();
 };
 }
 

@@ -1,4 +1,5 @@
 #include "star/ecs/component/camera2d.hpp"
+#include "star/tool/class_db.hpp"
 
 namespace star {
 mat4 &Camera2D::getViewProjectionMat() {
@@ -34,5 +35,9 @@ ivec4 Camera2D::getViewport(ivec2 size) {
         yOffset = (size.y - viewportHeight) / 2;
     }
     return {xOffset, yOffset, viewportWidth, viewportHeight};
+}
+
+void Camera2D::starBindFunc() {
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Camera2D, star::vec2, viewport)
 }
 } // namespace star

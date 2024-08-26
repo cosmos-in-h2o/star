@@ -22,8 +22,8 @@ class GLTexture2D : public Resource {
     int32_t width{}, height{}, channels{};
 
     static bool checkNode(const YAML::Node&node,const String&obj="GLTexture2D");
-    static GLTexture2D *createFromFile(StringView path);
-    static GLTexture2D *createFromNode(const YAML::Node &node);
+    static Ref<GLTexture2D>createFromFile(StringView path);
+    static Ref<GLTexture2D>createFromNode(const YAML::Node &node);
 
   private:
     GLuint _textureID{};

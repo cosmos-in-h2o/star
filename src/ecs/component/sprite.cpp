@@ -1,10 +1,11 @@
 #include "star/ecs/component/sprite.hpp"
+#include "star/tool/class_db.hpp"
 
 namespace star {
 Sprite::Sprite() = default;
 
-Sprite::Sprite(Transform2D *transform, GLTexture2D *texture, Shader *shader)
-    : transform(transform), texture(texture), shader(shader) {}
+Sprite::Sprite(Transform2D *transform, const Ref<Material2D> &material)
+    : transform(transform), material(material) {}
 
 Sprite::~Sprite() {
     if (_vbo != 0)
@@ -17,16 +18,10 @@ Sprite::~Sprite() {
 
 void Sprite::draw(const mat4 &viewProjectionMat) {
     glBindVertexArray(_vao);
-    shader->use();
-    texture->bind();
-
     auto mat = viewProjectionMat *
                (transform ? transform->getModelMatrix() : mat4(1.0)) *
                star::scale(mat4(1.0), vec3{size.x / 2, size.y / 2, 1});
-
-    shader->setUniformMatrix4fv("MVPMatrix", mat);
-    shader->setUniform4f("spriteColor", color[0], color[1], color[2], color[3]);
-
+    material->use(mat, color);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -56,5 +51,12 @@ void Sprite::bindVertex() {
                  GL_STATIC_DRAW);
 
     vertexAttribBind(VertexLayout::P2fT2f);
+}
+
+void Sprite::starBindFunc() {
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::vec2, size)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::Color, color)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::vec4, uv)
+    STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, uint32_t, order)
 }
 } // namespace star

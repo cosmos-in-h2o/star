@@ -1,10 +1,11 @@
 #include "star/tool/class_db.hpp"
 
 namespace star {
-HashMap<String, ComponentSerializeFunc> ClassDB::componentSerialize;
-HashMap<String, ComponentDeserializeFunc> ClassDB::componentDeserialize;
-HashMap<String, ComponentEditorUIFunc> ClassDB::componentEditorUI;
-HashMap<String, StructSerializeFunc> ClassDB::structSerialize;
-HashMap<String, StructDeserializeFunc> ClassDB::structDeserialize;
-HashMap<String, StructEditorUIFunc> ClassDB::structEditorUI;
+HashMap<String, FuncGroup<ComponentSerializeFunc>> ClassDB::componentSerialize;
+HashMap<String, FuncGroup<ComponentDeserializeFunc>>
+    ClassDB::componentDeserialize;
+HashMap<String, FuncGroup<ComponentEditorUIFunc>> ClassDB::componentEditorUI;
+HashMap<String, FuncGroup<StructSerializeFunc>> ClassDB::structSerialize;
+HashMap<String, FuncGroup<StructDeserializeFunc>> ClassDB::structDeserialize;
+HashMap<String, FuncGroup<StructEditorUIFunc>> ClassDB::structEditorUI;
 } // namespace star
