@@ -39,6 +39,8 @@ class Scene {
     void init();
 
     Entity addEntity(const String &name);
+    bool hasEntity(const String &name);
+    Entity getEntity(const String &name);
 
     template <class... Cs> void groupEach(auto callback) {
         this->_registry.group<Cs...>().each(callback);
@@ -73,14 +75,12 @@ class Scene {
     EventDispatcher &getDispatcher();
 
     static Scene *createScene();
-    static Scene*createSceneFromFile(StringView path);
+    static Scene *createSceneFromFile(StringView path);
 
   private:
     entt::registry _registry{};
     EventDispatcher _dispatcher{};
-    HashMap<String, entt::entity> _entities{};
-    // 用于保证创建entity时线程安全
-    std::mutex _mutex{};
+    SafeHashMap<String, entt::entity> _entities{};
 };
 
 template <class T> T &Entity::addComponent(auto &&...args) {

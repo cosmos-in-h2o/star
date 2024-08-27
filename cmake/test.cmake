@@ -37,3 +37,13 @@ target_sources(opengl_test
         PRIVATE
         test/opengl_test.cpp
 )
+
+add_executable(class_db_test)
+target_link_libraries(class_db_test
+        PRIVATE
+        star
+)
+target_sources(class_db_test
+        PRIVATE
+        test/class_db_test.cpp
+)

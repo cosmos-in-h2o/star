@@ -1,4 +1,5 @@
-#include "star/tool/default_bind.hpp"
+#include "star/driver/opengl/gl_common.hpp"
+// order
 #include "star/core/math/linear.hpp"
 #include "star/ecs/component/camera2d.hpp"
 #include "star/ecs/component/sprite.hpp"
@@ -6,6 +7,7 @@
 #include "star/ecs/component/transform3d.hpp"
 #include "star/function/render/color.hpp"
 #include "star/tool/class_db.hpp"
+#include "star/tool/default_bind.hpp"
 
 #define STAR_GENERATE_BASIC_STRUCT_SERIALIZE(className)                        \
     ClassDB::structSerialize[#className].pushBack(                             \
@@ -164,14 +166,14 @@ void DefaultBind::starBindFunc_char8() {
 void DefaultBind::starBindFunc_star_String() {
     ClassDB::structSerialize["star::String"].pushBack(
         [](void *data, ::YAML::Node &node) {
-            auto data_ = static_cast<star::String *>(data);
-            node["value"] = *data_->c_str();
+            auto &data_ = *static_cast<star::String *>(data);
+            node["value"] = data_.c_str();
         });
     ClassDB::structDeserialize["star::String"].pushBack(
         [](void *data, const YAML::Node &node) {
-            auto data_ = static_cast<star::String *>(data);
+            auto &data_ = *static_cast<star::String *>(data);
             // 应该有一步从std::string转换为star::String的过程，但目前的star::String就是std::string
-            *data_ = node["value"].as<star::String>();
+            data_ = node["value"].as<star::String>();
         });
     ClassDB::structEditorUI["star::String"].pushBack(
         [](const char *name, void *data) {
@@ -197,7 +199,7 @@ void DefaultBind::starBindFunc_star_vec2() {
         });
     ClassDB::structEditorUI["star::vec2"].pushBack(
         [](const char *name, void *data) {
-            auto data_ = *static_cast<vec2 *>(data);
+            auto &data_ = *static_cast<vec2 *>(data);
             ImGui::DragFloat2(name, value_ptr(data_), 0.1f);
         });
 }
@@ -219,7 +221,7 @@ void DefaultBind::starBindFunc_star_vec3() {
         });
     ClassDB::structEditorUI["star::vec3"].pushBack(
         [](const char *name, void *data) {
-            auto data_ = *static_cast<vec3 *>(data);
+            auto &data_ = *static_cast<vec3 *>(data);
             ImGui::DragFloat3(name, value_ptr(data_), 0.1f);
         });
 }
@@ -243,7 +245,7 @@ void DefaultBind::starBindFunc_star_vec4() {
         });
     ClassDB::structEditorUI["star::vec4"].pushBack(
         [](const char *name, void *data) {
-            auto data_ = *static_cast<vec4 *>(data);
+            auto &data_ = *static_cast<vec4 *>(data);
             ImGui::DragFloat4(name, value_ptr(data_), 0.1f);
         });
 }

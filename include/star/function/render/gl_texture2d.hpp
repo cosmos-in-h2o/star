@@ -9,9 +9,9 @@
 namespace star {
 class GLTexture2D : public Resource {
   public:
+    GLTexture2D();
     explicit GLTexture2D(const Texture2D &texture, bool isLinear = true,
                          bool mipmap = true);
-    explicit GLTexture2D(const String &path);
     ~GLTexture2D() override;
 
     GLuint getTextureID() const { return _textureID; }

@@ -11,24 +11,28 @@
 #include "star/rtl/string_view.hpp"
 
 namespace star {
+using CreateSceneFunc = std::function<Scene *()>;
 class Game {
     using PairT = std::pair<String, Scene *>;
 
   public:
     static void init(StringView name, Window *window);
     static void close();
+    static Scene *createScene(const String &sceneName);
     static void addScene(const String &name, Scene *scene);
     static void loadScene(const String &name);
     static void loadSceneWithoutUnload(const String &name);
     static void upload(const String &name);
     static Window *getWindow();
     static Scene *getActiveScene();
+    static auto starBindFunc() { return &_createScene; }
 
   private:
     static Window *_window;
     static PairT _activeScene;
     static String _name;
     static HashMap<String, Scene *> _scenes;
+    static HashMap<String, CreateSceneFunc> _createScene;
 };
 } // namespace star
 

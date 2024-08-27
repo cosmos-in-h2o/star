@@ -8,6 +8,7 @@ Game::PairT Game::_activeScene;
 Window *Game::_window = nullptr;
 String Game::_name{};
 HashMap<String, Scene *> Game::_scenes{};
+HashMap<String, CreateSceneFunc> Game::_createScene;
 
 void Game::init(StringView name, Window *window) {
     _name = name;
@@ -27,6 +28,10 @@ void Game::close() {
     }
 }
 
+Scene *Game::createScene(const String &sceneName) {
+    return _createScene[sceneName]();
+}
+
 void Game::addScene(const String &name, Scene *scene) {
     // 如果在列表中找到同名场景则删除列表中的场景
     auto it = _scenes.find(name);
@@ -35,12 +40,10 @@ void Game::addScene(const String &name, Scene *scene) {
         if (it->second == scene) {
             return;
         }
-        delete it->second;
+        Collector::push(it->second);
     }
     if (!scene) {
         ErrorHandler::reportWarn(makeError(ErrorType::NULLPTR_ARG), "scene");
-    } else {
-        scene->init();
     }
     _scenes[name] = scene;
 }
@@ -51,20 +54,22 @@ void Game::loadScene(const String &name) {
         Log::warn("Not found Scene: {}, you must add before load.", name);
         return;
     }
+    // 若场景已经被加载
     if (_activeScene.second == it->second) {
         return;
     }
-    auto res = _scenes.find(_activeScene.first);
-    // 先替换当前的场景在进行删除，防止对空指针惊醒操作
+    // 找到了场景并且未被加载则删除原场景并加载新场景
+    auto backScene = _scenes.find(_activeScene.first);
+    // 先替换掉活动场景再进行删除，防止多线程中外界对野指针的访问
     _activeScene = *it;
-
-    if (res != _scenes.end()) {
-        delete res->second;
-        _scenes.erase(_activeScene.first);
+    if (backScene != _scenes.end()) {
+        Collector::push(backScene->second);
+        _scenes.erase(backScene);
     }
-
+    // 若新场景可用则注册事件并初始化
     if (_activeScene.second) {
         _window->registerDispatch(_activeScene.second->getDispatcher());
+        it->second->init();
     }
 }
 
@@ -80,6 +85,7 @@ void Game::loadSceneWithoutUnload(const String &name) {
     _activeScene = *it;
     if (_activeScene.second) {
         _window->registerDispatch(_activeScene.second->getDispatcher());
+        it->second->init();
     }
 }
 
@@ -92,7 +98,7 @@ void Game::upload(const String &name) {
     if (it->second == _activeScene.second) {
         Log::warn("You're trying to unload active scene.");
     }
-    delete it->second;
+    Collector::push(it->second);
     _scenes.erase(it);
 }
 

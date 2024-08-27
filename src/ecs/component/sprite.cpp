@@ -54,6 +54,7 @@ void Sprite::bindVertex() {
 }
 
 void Sprite::starBindFunc() {
+    STAR_AUTO_CLASS_DB_ADD_COMPONENT(star::Sprite)
     STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::vec2, size)
     STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::Color, color)
     STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Sprite, star::vec4, uv)

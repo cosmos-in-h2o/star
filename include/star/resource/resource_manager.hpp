@@ -175,6 +175,7 @@ template <class T> Ref<T>::Ref(Ref<T> &&ref) noexcept {
 
     ref._resource = nullptr;
     ref._refCount = nullptr;
+    ref._name = {};
 }
 
 template <class T> Ref<T>::~Ref() {
@@ -185,7 +186,7 @@ template <class T> Ref<T>::~Ref() {
     }
     _resource = nullptr;
     _refCount = nullptr;
-    _name = StringView{};
+    _name = {};
 }
 
 template <class T> T *Ref<T>::get() const {
@@ -200,7 +201,7 @@ template <class T> void Ref<T>::unref() {
     }
     _resource = nullptr;
     _refCount = nullptr;
-    _name = StringView{};
+    _name = {};
 }
 
 template <class T> Ref<T> &Ref<T>::operator=(const Ref<T> &ref) {
@@ -224,15 +225,16 @@ template <class T> Ref<T> &Ref<T>::operator=(Ref<T> &&ref) noexcept {
     if (this == &ref) {
         return *this;
     }
-    if (this->_info) {
-        this->_info->operator--();
+    if (this->_refCount) {
+        this->_refCount->increment();
     }
     this->_resource = ref._resource;
     this->_name = std::move(ref._name);
     this->_refCount = ref._refCount;
 
-    ref._info = nullptr;
+    ref._resource = nullptr;
     ref._refCount = nullptr;
+    ref._name = {};
     return *this;
 }
 

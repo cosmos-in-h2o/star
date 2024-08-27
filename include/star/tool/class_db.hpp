@@ -8,8 +8,10 @@
 #include <yaml-cpp/yaml.h>
 
 namespace star {
+using AddComponentFunc = FuncPtr<void *, Entity &>;
+using CopyComponentFunc = FuncPtr<void, void *, void *>;
 using ComponentSerializeFunc = FuncPtr<void, void *, YAML::Node &>;
-using ComponentDeserializeFunc = FuncPtr<void, Entity &, const YAML::Node &>;
+using ComponentDeserializeFunc = FuncPtr<void, void *, const YAML::Node &>;
 using ComponentEditorUIFunc = FuncPtr<void, void *>;
 using StructSerializeFunc = FuncPtr<void, void *, YAML::Node &>;
 using StructDeserializeFunc = FuncPtr<void, void *, const YAML::Node &>;
@@ -30,6 +32,8 @@ template <class T> struct FuncGroup {
 
 class ClassDB {
   public:
+    static HashMap<String, AddComponentFunc> addComponent;
+    static HashMap<String, CopyComponentFunc> copyComponent;
     static HashMap<String, FuncGroup<ComponentSerializeFunc>>
         componentSerialize;
     static HashMap<String, FuncGroup<ComponentDeserializeFunc>>

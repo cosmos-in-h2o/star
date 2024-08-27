@@ -1,5 +1,5 @@
-#include "star/core/event/ecs_event.hpp"
 #include "star/core/ecs/scene.hpp"
+#include "star/core/event/ecs_event.hpp"
 #include <yaml-cpp/yaml.h>
 
 namespace star {
@@ -21,11 +21,22 @@ void Scene::init() {
 }
 
 Entity Scene::addEntity(const String &name) {
-    std::unique_lock<std::mutex> uniqueLock(_mutex);
     auto entity = _registry.create();
     _entities[name] = entity;
-    uniqueLock.unlock();
     return {this, entity};
+}
+
+bool Scene::hasEntity(const String &name) {
+    auto it = _entities.find(name);
+    return it != _entities.end();
+}
+
+Entity Scene::getEntity(const String &name) {
+    auto it = _entities.find(name);
+    if (it == _entities.end()) {
+        return {};
+    }
+    return {this, it->second};
 }
 
 EventDispatcher &Scene::getDispatcher() { return this->_dispatcher; }

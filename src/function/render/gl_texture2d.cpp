@@ -41,9 +41,7 @@ GLTexture2D::GLTexture2D(const Texture2D &texture, bool isLinear, bool mipmap) {
     }
 }
 
-GLTexture2D::GLTexture2D(const String &path) {
-    YAML::Node root = YAML::LoadFile(path);
-}
+GLTexture2D::GLTexture2D() = default;
 
 GLTexture2D::~GLTexture2D() = default;
 
@@ -68,10 +66,15 @@ Ref<GLTexture2D> GLTexture2D::createFromNode(const YAML::Node &node) {
         return {};
     }
     auto &textureNode = node["texture"];
-    auto texture = ResourceManager::loadResource<Texture2D>(
-        textureNode["path"].as<String>(),
-        Loader::loadTexture2D(textureNode["path"].as<String>()));
-
+    const String &texturePath = textureNode["path"].as<String>();
+    Ref<Texture2D> texture;
+    if (ResourceManager::hasResource(texturePath)) {
+        texture = ResourceManager::loadResource<Texture2D>(
+            texturePath,
+            Loader::loadTexture2D(textureNode["path"].as<String>()));
+    } else {
+        texture = ResourceManager::getResource<Texture2D>(texturePath);
+    }
     return ResourceManager::emplaceLoadResource<GLTexture2D>(
         node["name"].as<String>(), texture.operator*(),
         node["linear"].as<bool>(), node["mipmap"].as<bool>());

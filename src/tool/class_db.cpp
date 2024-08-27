@@ -1,6 +1,8 @@
 #include "star/tool/class_db.hpp"
 
 namespace star {
+HashMap<String, AddComponentFunc> ClassDB::addComponent;
+HashMap<String, CopyComponentFunc> ClassDB::copyComponent;
 HashMap<String, FuncGroup<ComponentSerializeFunc>> ClassDB::componentSerialize;
 HashMap<String, FuncGroup<ComponentDeserializeFunc>>
     ClassDB::componentDeserialize;

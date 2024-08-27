@@ -17,10 +17,10 @@
 #define STAR_AUTO_CLASS_DB_COMPONENT_DESERIALIZE_PROPERTY(                     \
     className, propertyType, propertyName)                                     \
     ::star::ClassDB::componentDeserialize[#className].pushBack(                \
-        [](::star::Entity &entity, const YAML::Node &node) {                   \
-            auto &com = entity.addComponent<className>();                      \
+        [](void *component, const YAML::Node &node) {                          \
+            auto com = static_cast<className *>(component);                    \
             ::star::ClassDB::structDeserialize[#propertyType](                 \
-                (void *)&com.propertyName, node[#propertyName]);               \
+                (void *)&com->propertyName, node[#propertyName]);              \
         });
 
 #define STAR_AUTO_CLASS_DB_COMPONENT_EDITOR_UI_PROPERTY(                       \
@@ -40,6 +40,14 @@
                                                       propertyName)            \
     STAR_AUTO_CLASS_DB_COMPONENT_EDITOR_UI_PROPERTY(className, propertyType,   \
                                                     propertyName)
+
+#define STAR_AUTO_CLASS_DB_ADD_COMPONENT(className, ...)                       \
+    ::star::ClassDB::addComponent[#className] = [](Entity &entity) {           \
+        return (void *)&entity.addComponent<className>(##__VA_ARGS__);         \
+    };                                                                         \
+    ::star::ClassDB::copyComponent[#className] = [](void *com, void *target) { \
+        *static_cast<className *>(target) = *static_cast<className *>(com);    \
+    };
 
 #define STAR_AUTO_CLASS_DB_STRUCT_SERIALIZE_PROPERTY(className, propertyType,  \
                                                      propertyName)             \
@@ -63,7 +71,7 @@
 
 #define STAR_AUTO_CLASS_DB_STRUCT_EDITOR_UI_PROPERTY(className, propertyType,  \
                                                      propertyName)             \
-    ::star::ClassDB::structEditorUI[#className].pushBack(                   \
+    ::star::ClassDB::structEditorUI[#className].pushBack(                      \
         [](const char *name, void *data) {                                     \
             auto data_ = static_cast<className *>(data);                       \
             ::star::ClassDB::structEditorUI[#propertyType](                    \

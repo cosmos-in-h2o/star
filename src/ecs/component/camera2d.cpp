@@ -38,6 +38,7 @@ ivec4 Camera2D::getViewport(ivec2 size) {
 }
 
 void Camera2D::starBindFunc() {
+    STAR_AUTO_CLASS_DB_ADD_COMPONENT(star::Camera2D)
     STAR_AUTO_CLASS_DB_COMPONENT_PROPERTY(star::Camera2D, star::vec2, viewport)
 }
 } // namespace star

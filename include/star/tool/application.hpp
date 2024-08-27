@@ -11,8 +11,13 @@ class Application {
     virtual void starBindFunc() = 0;
 };
 
+struct ExportData {
+    Application *application;
+    HashMap<String, CreateSceneFunc>*scenes;
+};
+
 using EntryPoionFunc = FuncPtr<void, EventDispatcher &>;
-using InterfaceFunc = FuncPtr<Application *>;
+using InterfaceFunc = FuncPtr<ExportData>;
 } // namespace star
 
 #endif // STAR_APPLICATION_HPP

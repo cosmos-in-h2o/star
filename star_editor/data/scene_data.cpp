@@ -1,28 +1,72 @@
 #include "scene_data.hpp"
+#include "star/tool/class_db.hpp"
 #include <fstream>
+#include <iostream>
+
+EntityData::EntityData() = default;
+
+EntityData::EntityData(const std::string &name, const star::Entity &entity) {
+    this->name = name;
+    this->entity = entity;
+}
+
+star::Component *EntityData::addComponent(const std::string &component) {
+    components[component] = static_cast<star::Component *>(
+        star::ClassDB::addComponent[component](entity));
+    return components[component];
+}
+
+YAML::Node EntityData::serialize() const {
+    YAML::Node node;
+    node["name"] = name;
+    for (auto &[k, v] : components) {
+        star::Log::debug("{}", k);
+        YAML::Node componentNode;
+        componentNode["type"] = k;
+        YAML::Node data;
+        star::ClassDB::componentSerialize[k](v, data);
+        componentNode["data"] = data;
+        node["components"].push_back(componentNode);
+    }
+    return node;
+}
+
+EntityData EntityData::loadFromNode(YAML::Node &node) {
+    EntityData data;
+    if (node["name"]) {
+        data.name = node["name"].as<std::string>();
+    }
+    if (node["components"]) {
+        for (auto item : node["components"]) {
+            auto com =
+                star::ClassDB::addComponent[item["type"].as<std::string>()](
+                    data.entity);
+            star::ClassDB::componentDeserialize[item["type"].as<std::string>()](
+                com, item["data"]);
+        }
+    }
+}
 
 SceneData::SceneData() = default;
 
 SceneData::SceneData(std::string name) : _name(std::move(name)) {}
 
-void SceneData::addEntity(const std::string &folder, const EntityData &entity) {
-    if (_entities.find(folder) != _entities.end()) {
-        _entities[folder].push_back(entity);
-    } else {
-        _entities[folder] = {entity};
-    }
+EntityData &SceneData::addEntity(const std::string &folder,
+                                 const std::string &entity) {
+    return _entities[folder].emplace_back(entity, _scene.addEntity(entity));
 }
 
 YAML::Node SceneData::serialize() const {
     YAML::Node node;
     node["name"] = _name;
-    YAML::Node entities;
     for (const auto &[k, v] : _entities) {
+        YAML::Node folderNode;
+        folderNode["name"] = k;
         for (const auto &item : v) {
-            entities[k].push_back(item.serialize());
+            folderNode["entities"].push_back(item.serialize());
         }
+        node["folders"].push_back(folderNode);
     }
-    node["entities"] = entities;
     return node;
 }
 
@@ -33,37 +77,44 @@ void SceneData::writeToFile(const char *path) const {
     out.close();
 }
 
-SceneData SceneData::loadFromNode(YAML::Node &node) {
-    SceneData data;
+void SceneData::loadFromNode(YAML::Node &node) {
     if (node["name"]) {
-        data._name = node["name"].as<std::string>();
+        _name = node["name"].as<std::string>();
     }
-    if (node["entities"]) {
-        for (auto item : node["entities"]) {
-            if (data._entities.find(item.first.as<std::string>()) ==
-                data._entities.end()) {
-                data._entities[item.first.as<std::string>()] = {};
-            }
-            for (auto item1 : item.second) {
-                data._entities[item.first.as<std::string>()].push_back(
+    if (node["folders"]) {
+        for (auto item : node["folders"]) {
+            for (auto item1 : item["entities"]) {
+                _entities[item["name"].as<std::string>()].push_back(
                     EntityData::loadFromNode(item1));
             }
         }
     }
-    return data;
 }
 
-SceneData SceneData::loadFromFile(const char *path) {
+void SceneData::loadFromFile(const char *path) {
     auto node = YAML::LoadFile(path);
-    return loadFromNode(node);
+    loadFromNode(node);
 }
 
-star::Scene *SceneData::loadToScene() {
-    star::Scene *scene = new star::Scene;
-    for (auto &[k, v] : _entities) {
-        for (auto &item : v) {
-            item.loadToEntity(scene);
-        }
+void SceneDataManager::bindToGame(
+    star::HashMap<star::String, star::CreateSceneFunc> *gameScenes) {
+    if (!gameScenes) {
+        return;
     }
-    return scene;
+    auto &gameScenesRef = *gameScenes;
+    for (auto &[k, v] : scenes) {
+        gameScenesRef[k] = [&]() {
+            auto ptr = new star::Scene;
+            for (auto &[k1, v1] : v.getEntities()) {
+                for (auto &item : v1) {
+                    auto entity = ptr->addEntity(item.name);
+                    for (auto &[comType, comPtr] : item.components) {
+                        auto com = star::ClassDB::addComponent[comType](entity);
+                        star::ClassDB::copyComponent[comType](comPtr, com);
+                    }
+                }
+            }
+            return new star::Scene;
+        };
+    }
 }

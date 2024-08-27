@@ -76,5 +76,8 @@
 
 // tool
 #include "star/tool/application.hpp"
+#include "star/tool/class_db.hpp"
+#include "star/tool/class_db_macro.hpp"
+#include "star/tool/default_bind.hpp"
 #include "star/tool/imgui/imgui.hpp"
 // #include"star/tool/
