@@ -1,7 +1,10 @@
 #include "star/star.hpp"
 //
 #include "data/scene_data.hpp"
-#include "dockspaces/scene_view.hpp"
+#include "elements/detail.hpp"
+#include "elements/hierarchy.hpp"
+#include "elements/menubar.hpp"
+#include "elements/scene_view.hpp"
 #include <fstream>
 
 using namespace star;
@@ -14,6 +17,7 @@ int main(int argc, char **argv) {
     star::Path::init("D:/program/star/");
 
     ImGUI::init(window.get());
+    ImGUI::menuBarFunc = menubar;
 
     star::ResourceManager::init();
 
@@ -52,17 +56,12 @@ int main(int argc, char **argv) {
 
     star::DefaultBind::starBindFunc();
     SceneData data("scene1");
-    data.addEntity("ui", "entity");
-    data.addEntity("ui", "entity2");
-    data.addEntity("light", "entity");
-    data.addEntity("light", "entity2").addComponent("star::Transform2D");
-    data.writeToFile("out.put");
-
+    data.loadFromFile("./out.put");
+    Hierarchy hierarchy{};
+    Detail detail{};
     ivec4 viewport;
     vec2 framebufferSize = framebuffer.getSize();
-
     SceneView sceneView{&framebuffer, &framebufferSize, &camera, &viewport};
-
     while (!window->shouldClose()) {
         glfwPollEvents();
         context.swapBuffer();
@@ -78,22 +77,13 @@ int main(int argc, char **argv) {
         ImGUI::begin();
 
         sceneView.draw();
-        ImGui::Begin("Hierarchy");
-        ImGui::Text("star::Transform2D");
-
-        ImGui::SliderFloat2(
-            "Position", star::value_ptr(cameraTransform.position), -1024, 1024);
-        ImGui::SliderFloat("旋转角", &cameraTransform.rotation, -360, 360);
-        ImGui::DragFloat2("Scale", star::value_ptr(transform.scale), 0.01f);
-        ImGui::ColorEdit4("color", star::value_ptr(sprite.color));
-        ImGui::End();
+        hierarchy.draw(&data);
+        detail.draw(hierarchy.entity);
 
         ImGUI::end();
     }
-    auto p = &star::Transform2D::position;
-    Transform2D t;
-    t.*p = {2, 3};
     ImGUI::close();
     Collector::garbageCollect();
+    data.writeToFile("out.put");
     return 0;
 }

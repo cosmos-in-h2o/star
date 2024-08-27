@@ -14,15 +14,17 @@
 struct GLFWwindow;
 
 namespace star {
+using MenuBarFunc = FuncPtr<void>;
+
 class ImGUI {
   public:
     static void init(Window *window);
     static void close();
     static void begin();
     static void end();
+    static MenuBarFunc menuBarFunc;
 
   private:
-    static void menuBar();
     static Window *_window;
 };
 } // namespace star

@@ -8,15 +8,25 @@
 #include <string>
 #include <vector>
 
+struct ComponentData {
+    bool isOpen = true;
+    star::Component *component;
+};
+
 struct EntityData {
     EntityData();
     EntityData(const std::string &name, const star::Entity &entity);
     star::Entity entity;
     std::string name;
-    std::unordered_map<std::string, star::Component *> components;
+    std::unordered_map<std::string, ComponentData> components;
     star::Component *addComponent(const std::string &component);
     YAML::Node serialize() const;
-    static EntityData loadFromNode(YAML::Node &node);
+    static EntityData loadFromNode(star::Scene &scene,YAML::Node &node);
+};
+
+struct Folder {
+    bool isOpen = false;
+    std::vector<EntityData> entities{};
 };
 
 class SceneData {
@@ -30,17 +40,17 @@ class SceneData {
     void writeToFile(const char *path) const;
     void loadFromNode(YAML::Node &node);
     void loadFromFile(const char *path);
-    auto &getEntities(){return _entities;};
+    auto &getFolders() { return _folders; };
 
   private:
     std::string _name{};
     star::Scene _scene{};
-
-    std::unordered_map<std::string, std::vector<EntityData>> _entities{};
+    std::unordered_map<std::string, Folder> _folders{};
 };
 
 struct SceneDataManager {
     std::unordered_map<std::string, SceneData> scenes{};
+    SceneData *activeScene{};
     void
     bindToGame(star::HashMap<star::String, star::CreateSceneFunc> *gameScenes);
 };

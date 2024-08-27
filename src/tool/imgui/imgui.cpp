@@ -2,6 +2,7 @@
 
 namespace star {
 Window *ImGUI::_window;
+MenuBarFunc ImGUI::menuBarFunc = nullptr;
 
 void ImGUI::init(Window *window) {
     _window = window;
@@ -73,9 +74,10 @@ void ImGUI::begin() {
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
     }
-
     if (ImGui::BeginMenuBar()) {
-        menuBar();
+        if (menuBarFunc) {
+            menuBarFunc();
+        }
         ImGui::EndMenuBar();
     }
 
@@ -91,14 +93,6 @@ void ImGUI::end() {
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
-    }
-}
-
-void ImGUI::menuBar() {
-    if (ImGui::BeginMenu("window")) {
-        if (ImGui::MenuItem("退出"))
-            Log::trace("exit");
-        ImGui::EndMenu();
     }
 }
 } // namespace star
